@@ -1,0 +1,11 @@
+(
+  name: "harmonics",
+  summary: "Harmonic operations",
+  version: "0.001",
+  schelp: "Harmonics.schelp",
+  dependencies: nil,
+  license: "GNU GPL v3.0",
+  copyright: "madskjeldgaard",
+  ext_dependency: nil,
+  url: "https://github.com/madskjeldgaard/harmonics"
+)
