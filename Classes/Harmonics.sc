@@ -111,6 +111,15 @@ Harmony{
 
     init{|intervals|
 
+        if(intervals.isSymbol, {
+            intervals = this.class.at(intervals)
+        });
+
+        if(intervals.isNil, {
+            "Invalid intervals".error;
+            ^nil
+        });
+
         // Store original intervals
         intervalsOriginal = intervals.copy;
 
@@ -120,18 +129,6 @@ Harmony{
 
         ^this
     }
-
-    // withDouble{|patternType=\root, octaves=1|
-    //     var doubledOriginal = ChordOps.double(intervalsOriginal, patternType, octaves);
-
-    //     ^this
-    // }
-
-    // withInversion{|patternType=\first, style=\up|
-    //     intervalsModified = ChordOps.invert(intervalsOriginal, patternType, style);
-
-    //     ^this
-    // }
 
     addInversion{|patternType=\first, style=\up|
         inversions = inversions.add([patternType, style]);
@@ -161,20 +158,26 @@ Harmony{
         ^this
     }
 
-    get{
-        var full = intervalsOriginal;
+    get {
+    var result = intervalsOriginal.copy;
 
-        // Add doubles and inversions
-        doublings.do{|double|
-            full = ChordOps.double(full, double[0], double[1])
+    inversions.do { |inversion|
+        result = ChordOps.invert(result, inversion[0], inversion[1]);
+    };
+
+    doublings.do { |doubling|
+        var doubledOffsets = ChordOps.double(intervalsOriginal, doubling[0], doubling[1]);
+
+        // Only add the doubled, unique offsets to the result
+        doubledOffsets = doubledOffsets.reject { |offset|
+            intervalsOriginal.includes(offset)
         };
 
-        inversions.do{|inversion|
-            full = ChordOps.invert(full, inversion[0], inversion[1])
-        };
+        result = result.add(doubledOffsets);
+    };
 
-        ^full.removeDuplicates.sort
-    }
+    ^result;
+}
 
 }
 
@@ -193,57 +196,45 @@ ChordOps{
     }
 
     *double{|intervals, patternType=\root, octaves=1|
-        var doubledIntervals = intervals.copy;
+        var doubledIntervals = [];
 
-        patternType.switch(
-            \root, {
-                octaves.abs.do{|i|
-                    var octaveShift = 12 * (i + 1) * octaves.sign;
-                    doubledIntervals = doubledIntervals.add(intervals[0] + octaveShift)
+        var octaveShiftSemitones = {|x|
+            // var oct = if (x % 2 == 0) { -12 } { 12 };
+            var oct = 12;
+
+            oct * (x + 1) * octaves.sign;
+        };
+
+        octaves.abs.do{|i|
+            patternType.switch(
+                \root, {
+                    doubledIntervals = doubledIntervals.add(doubledIntervals[0] + octaveShiftSemitones.value(i))
+                },
+                \second, {
+                    doubledIntervals = doubledIntervals.add(doubledIntervals[1] + octaveShiftSemitones.value(i))
+                },
+                \third, {
+                    doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i))
+                },
+                \rootandsecond, {
+                    doubledIntervals = doubledIntervals.add(doubledIntervals[0] + octaveShiftSemitones.value(i));
+                    doubledIntervals = doubledIntervals.add(doubledIntervals[1] + octaveShiftSemitones.value(i));
+                },
+                \rootandthird, {
+                    doubledIntervals = doubledIntervals.add(doubledIntervals[0] + octaveShiftSemitones.value(i));
+                    doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i));
+                },
+                \secondandthird, {
+                    doubledIntervals = doubledIntervals.add(doubledIntervals[1] + octaveShiftSemitones.value(i));
+                    doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i));
+                },
+                \all, {
+                    doubledIntervals = doubledIntervals.add(doubledIntervals[0] + octaveShiftSemitones.value(i));
+                    doubledIntervals = doubledIntervals.add(doubledIntervals[1] + octaveShiftSemitones.value(i));
+                    doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i));
                 }
-            },
-            \second, {
-                octaves.abs.do{|i|
-                    var octaveShift = 12 * (i + 1) * octaves.sign;
-                    doubledIntervals = doubledIntervals.add(intervals[1] + octaveShift)
-                }
-            },
-            \third, {
-                octaves.abs.do{|i|
-                    var octaveShift = 12 * (i + 1) * octaves.sign;
-                    doubledIntervals = doubledIntervals.add(intervals[2] + octaveShift)
-                }
-            },
-            \rootandsecond, {
-                octaves.abs.do{|i|
-                    var octaveShift = 12 * (i + 1) * octaves.sign;
-                    doubledIntervals = doubledIntervals.add(intervals[0] + octaveShift);
-                    doubledIntervals = doubledIntervals.add(intervals[1] + octaveShift);
-                }
-            },
-            \rootandthird, {
-                octaves.abs.do{|i|
-                    var octaveShift = 12 * (i + 1) * octaves.sign;
-                    doubledIntervals = doubledIntervals.add(intervals[0] + octaveShift);
-                    doubledIntervals = doubledIntervals.add(intervals[2] + octaveShift);
-                }
-            },
-            \secondandthird, {
-                octaves.abs.do{|i|
-                    var octaveShift = 12 * (i + 1) * octaves.sign;
-                    doubledIntervals = doubledIntervals.add(intervals[1] + octaveShift);
-                    doubledIntervals = doubledIntervals.add(intervals[2] + octaveShift);
-                }
-            },
-            \all, {
-                octaves.abs.do{|i|
-                    var octaveShift = 12 * (i + 1) * octaves.sign;
-                    doubledIntervals = doubledIntervals.add(intervals[0] + octaveShift);
-                    doubledIntervals = doubledIntervals.add(intervals[1] + octaveShift);
-                    doubledIntervals = doubledIntervals.add(intervals[2] + octaveShift);
-                }
-            }
-        );
+            );
+        };
 
         // Sort
         ^doubledIntervals.removeDuplicates.sort
