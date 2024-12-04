@@ -106,6 +106,55 @@ Pdef(\risingChords,
 )
 ```
 
+#### Ambient machine
+
+```supercollider
+(
+// A synth to play notes
+SynthDef.new(\ambientNote, {
+    arg freq=440, amp=0.1, gate=1, dur=1, cutoff=450, resonance=0.75, attack=0.5, sustainLevel=0.95, decay=0.4, release=0.5, pan=0;
+    var env = EnvGen.ar(Env.adsr(attackTime: attack, decayTime: decay,sustainLevel: sustainLevel, releaseTime: release), gate: gate, timeScale: dur, doneAction:2);
+    var sig = BlitB3Saw.ar(freq);
+
+    sig = DFM1.ar(sig, cutoff, resonance);
+
+    sig = Pan2.ar(sig, pan.poll);
+    Out.ar(0, sig * amp * env);
+}).add;
+
+// A reverb to make it washy
+SynthDef.new(\jpverb, {
+    arg in, xfade=0.3, predelay=0.1, revtime=42.0, damp=0.01, room=4.5;
+    var dry = In.ar(in, 2);
+    var sig = JPverb.ar(in: dry, t60: revtime, damp: damp, size: room);
+
+    XOut.ar(0, xfade, sig);
+}).add;
+)
+
+// Play random chords
+(
+var chordName = 'minor7';
+var harmony = chordName.asHarmony.withDouble(octaves: -1);
+var numNotes = harmony.value.size;
+
+Pdef(\ambienty,
+    Pbind(
+        \instrument, \ambientNote,
+        \octave, 5,
+        \scale, Scale.minor,
+        \degree, Pwhite(-5,5,inf),
+        \mtranspose, harmony,
+        \dur, 32.0,
+        \pan, Pwhite(-1.0,1.0,inf).clump(numNotes)
+    )
+).play;
+)
+
+// Add reverb
+Synth.after(1, \jpverb)
+```
+
 #### MIDI: Harmonize incoming midi notes
 
 TODO
