@@ -1,3 +1,44 @@
+/*
+
+TODO:
+- make doubling work in .get{}
+
+
+Example:
+
+(
+    var h = Harmony.new(\major);
+    h.addInversion(\first, \up);
+    h.addDouble(\root, 2);
+    h.get;
+)
+
+
+Pattern:
+
+// Arpeggiate inversions of a chord
+(
+var h = Harmony.new(\major);
+
+Pdef(\fast,
+    Pbind(
+        \octave, 4,
+        \degree, 0,
+        \mtranspose,
+        Pseq([
+            h.asPseq(4),
+            h.withInversion(\first, \up).asPseq(4),
+            h.withInversion(\second, \up).asPseq(4),
+            h.withInversion(\first, \down).asPseq(4),
+            h.withInversion(\second, \down).asPseq(4),
+        ], inf),
+        \dur, 0.125
+    )
+).play;
+
+)
+
+*/
 // Represents a harmony with a set of harmonic intervals
 Harmony{
     classvar <all;
@@ -6,6 +47,15 @@ Harmony{
 
     *initClass{
         all = [
+
+            // No harmonics at all
+            \none -> [0],
+
+            // The same as above but with a more explicit name
+            \unison -> [0, 0],
+
+            // Simple harmonics
+
             // Minor 2nd
             \m2 -> [0, 1],
 
@@ -45,6 +95,8 @@ Harmony{
             // Perfect 8th
             \P8 -> [0, 12],
 
+            // 3 tone chords
+
             // Major
             \major -> [0, 4, 7],
 
@@ -56,6 +108,8 @@ Harmony{
 
             // Augmented
             \augmented -> [0, 4, 8],
+
+            // 4 tone chords
 
             // Major 7th
             \major7 -> [0, 4, 7, 11],
@@ -71,6 +125,8 @@ Harmony{
 
             // Half Diminished 7th
             \halfDiminished7 -> [0, 3, 6, 10],
+
+            // Large chords
 
             // Major 9th
             \major9 -> [0, 4, 7, 11, 14],
@@ -116,13 +172,12 @@ Harmony{
         });
 
         if(intervals.isNil, {
-            "Invalid intervals".error;
+            "Invalid intervals: %".format(intervals).error;
             ^nil
         });
 
         // Store original intervals
         intervalsOriginal = intervals.copy;
-
 
         this.clearInversions;
         this.clearDoubles;
@@ -159,27 +214,38 @@ Harmony{
     }
 
     get {
-    var result = intervalsOriginal.copy;
+        var result = intervalsOriginal.copy;
 
-    inversions.do { |inversion|
-        result = ChordOps.invert(result, inversion[0], inversion[1]);
-    };
-
-    doublings.do { |doubling|
-        var doubledOffsets = ChordOps.double(intervalsOriginal, doubling[0], doubling[1]);
-
-        // Only add the doubled, unique offsets to the result
-        doubledOffsets = doubledOffsets.reject { |offset|
-            intervalsOriginal.includes(offset)
+        inversions.do { |inversion|
+            result = ChordOps.invert(result, inversion[0], inversion[1]);
         };
 
-        result = result.add(doubledOffsets);
-    };
+        doublings.do { |doubling|
+            var doubledOffsets = ChordOps.double(intervalsOriginal, doubling[0], doubling[1]);
 
-    ^result;
+            // Only add the doubled, unique offsets to the result
+            doubledOffsets = doubledOffsets.reject { |offset|
+                intervalsOriginal.includes(offset)
+            };
+
+            result = result.add(doubledOffsets);
+        };
+
+        ^result;
+    }
+
+    // Same as .addInversion but creates a copy of the instance and returns that
+    withInversion{|patternType=\first, style=\up|
+        ^this.copy.addInversion(patternType, style)
+    }
+
+    // Same as .addDouble but creates a copy of the instance and returns that
+    withDouble{|patternType=\root, octaves=1|
+        ^this.copy.addDouble(patternType, octaves)
+    }
+
 }
 
-}
 
 
 // Perform chord operations on an array of intervals
@@ -303,5 +369,48 @@ ChordOps{
 
     harmonicRevert{|patternType, style|
         ^ChordOps.revert(this, patternType, style)
+    }
+}
+
+// Arpeggiate a harmony
+/*
+// Example:
+(
+p = \major7.asHarmony.asPseq(repeats: inf);
+z = p.asStream;
+z.next()
+)
+*/
++ Harmony {
+    asPseq{|repeats=inf|
+        ^Pseq.new(this.get, repeats)
+    }
+
+    asPrand{|repeats=inf|
+        ^Prand.new(this.get, repeats)
+    }
+
+    asPxrand{|repeats=inf|
+        ^Pxrand.new(this.get, repeats)
+    }
+
+    asPshuffle{|repeats=inf|
+        ^Pshuffle.new(this.get, repeats)
+    }
+}
+
+// A useful way to convert a single symbol into a harmony
+/*
+// EXAMPLE
+(
+p = Pseq([\m3, \M3, \P4, \P5], inf).collect{|key| key.asHarmony.get() };
+z = p.asStream;
+z.next()
+)
+
+*/
++ Symbol {
+    asHarmony{
+        ^Harmony.new(this)
     }
 }
