@@ -6,12 +6,42 @@ It can be used to easily turn melodies into chords/harmonies in a pattern or to 
 
 You can also go the other way by turning a harmony/chord into an arpeggio.
 
+A harmony in the context of this toolkit is simply an array of semi tone offsets (or midinotes). These can then be transformed using conventional harmonic operations like doubling (adding octaves above or below) or inversions of the root notes of the chords. 
+
 ## Installation
 
 Open up SuperCollider and evaluate the following line of code:
 `Quarks.install("https://github.com/madskjeldgaard/harmonics")`
 
 ## Examples
+
+### Simple
+
+A simple example of how to create a harmony and perform operations on it using inversions and doublings.
+
+```supercollider
+(
+// Can be initialized with a chord name
+var h = Harmony.new(\major7);
+
+// Or a list of semitone offsets
+// var h = Harmony.new([0, 5, 9]);
+
+// See the semitones of the chord
+"Before operations: %".format(h.value).postln;
+
+// Perform inversion
+h.addInversion(patternType: \first, style: \up);
+"After inversion operations: %".format(h.value).postln;
+
+// Clear the inversion if you fancy
+// h.clearInversion();
+
+// Perform doubling
+h.addDouble(patternType: \root,  octaves: -2);
+"After doubling operations: %".format(h.value).postln;
+)
+```
 
 ### Patterns
 
