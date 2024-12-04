@@ -274,7 +274,7 @@ ChordOps{
 
     *prClean{|intervals|
         // Remove duplicates
-        ^intervals.flat.removeDuplicates.sort
+        ^intervals.flat.removeDuplicates
     }
 
     *transpose{|intervals, amount=0|
