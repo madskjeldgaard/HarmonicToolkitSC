@@ -45,7 +45,7 @@ h.addDouble(patternType: \root,  octaves: -2);
 
 ### Patterns
 
-All of these pattern examples use the `\mtranspose` key in Pbind to transpose each midi note using one of the harmonies chosen. This is neat because then you can write a melody in either `\degree` or `\midinote` and keep that melody seperate from your harmony.
+All of these pattern examples use the `\ctranspose` key in Pbind to transpose each midi note using one of the harmonies chosen. This is neat because then you can write a melody in either `\degree` or `\midinote` and keep that melody seperate from your harmony.
 
 #### Pbind: Simple arpeggio
 
@@ -57,7 +57,7 @@ var chordName = 'major7';
 Pdef(\simpleArp,
     Pbind(
         \degree, Pstep([0,4,5,7], 4, inf),
-        \mtranspose, chordName.asHarmony.asPseq(inf),
+        \ctranspose, chordName.asHarmony.asPseq(inf),
         \dur, 0.125,
     )
 ).play;
@@ -74,7 +74,7 @@ var chordName = 'major7';
 Pdef(\simpleHarmony,
     Pbind(
         \degree, Pwhite(0,5),
-        \mtranspose, chordName.asHarmony,
+        \ctranspose, chordName.asHarmony,
         \dur, 0.125,
     )
 ).play;
@@ -97,7 +97,7 @@ Pdef(\risingChords,
         \degree, melody.trace(prefix: "degree: "),
 
         // Harmonize it
-        \mtranspose, chords.collect{|chordName| chordName.asHarmony.get() }.trace(prefix: "chord: "),
+        \ctranspose, chords.collect{|chordName| chordName.asHarmony.get() }.trace(prefix: "chord: "),
 
         \dur, 0.125,
     )
@@ -144,7 +144,7 @@ Pdef(\ambienty,
         \octave, 5,
         \scale, Scale.minor,
         \degree, Pwhite(-5,5,inf),
-        \mtranspose, harmony,
+        \ctranspose, harmony,
         \dur, 32.0,
         \pan, Pwhite(-1.0,1.0,inf).clump(numNotes)
     )
@@ -182,7 +182,7 @@ Pdef(\inversions,
         \degree, Pdup(64, Pseq([0,3,5], inf)),
 
         // The harmonization of the melody flattened as arpeggeios
-        \mtranspose, Pseq([
+        \ctranspose, Pseq([
             h.asPseq(4),
             h.withInversion(\first, \up).asPseq(4),
             h.withInversion(\second, \up).asPseq(4),
@@ -201,5 +201,5 @@ Pdef(\inversions,
 
 // Now harmonize the arpeggio above
 // This takes the pattern above and plays harmonies on top of it
-Pdef(\inversionsOvertones, Pbindf(Pdef(\inversions), \octave, Pkey(\octave)+1, \mtranspose, Pkey(\mtranspose) + \major7.asHarmony.get() )).play;
+Pdef(\inversionsOvertones, Pbindf(Pdef(\inversions), \octave, Pkey(\octave)+1, \ctranspose, Pkey(\ctranspose) + \major7.asHarmony.get() )).play;
 ```

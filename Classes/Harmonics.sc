@@ -161,6 +161,24 @@ Harmony{
         ^super.new.init(intervals)
     }
 
+    *random{
+        var randomName = this.all.keys.choose;
+
+        ^this.new(randomName)
+    }
+
+    *randomTriad{
+        var randomName = [\major, \minor, \diminished, \augmented].choose;
+
+        ^this.new(randomName)
+    }
+
+    *randomSeventh{
+        var randomName = [\major7, \minor7, \dominant7, \diminished7, \halfDiminished7].choose;
+
+        ^this.new(randomName)
+    }
+
     init{|intervals|
 
         if(intervals.isSymbol, {
@@ -343,9 +361,9 @@ ChordOps{
         );
 
         // Check if the pattern type is valid
-        if(this.inversionTypes.includes(patternType).not, {
+        ^if(this.inversionTypes.includes(patternType).not, {
             "Invalid pattern type: %".format(patternType).error;
-            ^nil
+            nil
         }, {
 
 
@@ -372,7 +390,7 @@ ChordOps{
                 }
             };
 
-            ^this.prClean(invertedIntervals)
+            this.prClean(invertedIntervals)
         });
 
     }
