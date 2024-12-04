@@ -193,17 +193,6 @@ Harmony{
 
     // Add a dooubling of the root notes either below or above the original notes
     // Negative octaves value will add the doubling below the original notes
-
-    // Example:
-    (
-        h = \major7.asHarmony;
-
-        // Add an octave below
-        h.addDouble(patternType: \root, octaves: -1);
-
-        h.get
-    )
-
     */
     addDouble{|patternType=\root, octaves=(-1)|
         doublings = doublings.add([patternType, octaves]);
@@ -254,6 +243,10 @@ Harmony{
     // Same as .addDouble but creates a copy of the instance and returns that
     withDouble{|patternType=\root, octaves=1|
         ^this.copy.addDouble(patternType, octaves)
+    }
+
+    asStream{
+        ^this.get.asStream()
     }
 
 }

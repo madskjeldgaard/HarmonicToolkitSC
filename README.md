@@ -11,7 +11,12 @@ Open up SuperCollider and evaluate the following line of code:
 
 ## Examples
 
-### Pbind: Harmonize a random melody
+
+### Patterns
+
+All of these pattern examples use the `\mtranspose` key in Pbind to transpose each midi note using one of the harmonies chosen. This is neat because then you can write a melody in either `\degree` or `\midinote` and keep that melody seperate from your harmony.
+
+#### Pbind: Harmonize a random melody
 
 ```supercollider
 (
@@ -21,18 +26,18 @@ var chordName = 'major7';
 Pdef(\simpleHarmony,
     Pbind(
         \degree, Pwhite(0,5),
-        \mtranspose, chordName.asHarmony.get(),
+        \mtranspose, chordName.asHarmony,
         \dur, 0.125,
     )
 ).play;
 )
 ```
 
-### Harmonize incoming midi notes
+#### Harmonize incoming midi notes
 
 TODO
 
-### Advanced pattern example: Arpeggio with harmonized chords
+#### Advanced pattern example: Arpeggio with harmonized chords
 
 ```supercollider
 /*
