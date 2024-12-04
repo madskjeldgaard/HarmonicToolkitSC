@@ -193,7 +193,23 @@ Harmony{
         ^this
     }
 
-    addDouble{|patternType=\root, octaves=1|
+    /*
+
+    // Add a dooubling of the root notes either below or above the original notes
+    // Negative octaves value will add the doubling below the original notes
+
+    // Example:
+    (
+        h = \major7.asHarmony;
+
+        // Add an octave below
+        h.addDouble(patternType: \root, octaves: -1);
+
+        h.get
+    )
+
+    */
+    addDouble{|patternType=\root, octaves=(-1)|
         doublings = doublings.add([patternType, octaves]);
 
         doublings = doublings.removeDuplicates;
@@ -231,7 +247,7 @@ Harmony{
             result = result.add(doubledOffsets);
         };
 
-        ^result;
+        ^ChordOps.prClean(result)
     }
 
     // Same as .addInversion but creates a copy of the instance and returns that
@@ -252,9 +268,17 @@ Harmony{
 // All operations happen in semitone offsets
 ChordOps{
 
+    *doublingTypes{
+        ^[\root, \second, \third, \rootandsecond, \rootandthird, \secondandthird, \all]
+    }
+
+    *inversionTypes{
+        ^[\first, \second, \third, \middle, \top, \edges, \none]
+    }
+
     *prClean{|intervals|
         // Remove duplicates
-        ^intervals.removeDuplicates
+        ^intervals.flat.removeDuplicates.sort
     }
 
     *transpose{|intervals, amount=0|
@@ -262,7 +286,7 @@ ChordOps{
     }
 
     *double{|intervals, patternType=\root, octaves=1|
-        var doubledIntervals = [];
+        var doubledIntervals = intervals.copy;
 
         var octaveShiftSemitones = {|x|
             // var oct = if (x % 2 == 0) { -12 } { 12 };
@@ -271,39 +295,45 @@ ChordOps{
             oct * (x + 1) * octaves.sign;
         };
 
-        octaves.abs.do{|i|
-            patternType.switch(
-                \root, {
-                    doubledIntervals = doubledIntervals.add(doubledIntervals[0] + octaveShiftSemitones.value(i))
-                },
-                \second, {
-                    doubledIntervals = doubledIntervals.add(doubledIntervals[1] + octaveShiftSemitones.value(i))
-                },
-                \third, {
-                    doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i))
-                },
-                \rootandsecond, {
-                    doubledIntervals = doubledIntervals.add(doubledIntervals[0] + octaveShiftSemitones.value(i));
-                    doubledIntervals = doubledIntervals.add(doubledIntervals[1] + octaveShiftSemitones.value(i));
-                },
-                \rootandthird, {
-                    doubledIntervals = doubledIntervals.add(doubledIntervals[0] + octaveShiftSemitones.value(i));
-                    doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i));
-                },
-                \secondandthird, {
-                    doubledIntervals = doubledIntervals.add(doubledIntervals[1] + octaveShiftSemitones.value(i));
-                    doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i));
-                },
-                \all, {
-                    doubledIntervals = doubledIntervals.add(doubledIntervals[0] + octaveShiftSemitones.value(i));
-                    doubledIntervals = doubledIntervals.add(doubledIntervals[1] + octaveShiftSemitones.value(i));
-                    doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i));
-                }
-            );
-        };
+        // Check if the pattern type is valid
+        if(this.doublingTypes.includes(patternType).not, {
+            "Invalid pattern type: %".format(patternType).error;
+            ^nil
+        }, {
+            octaves.abs.do{|i|
+                patternType.switch(
+                    \root, {
+                        doubledIntervals = doubledIntervals.add(doubledIntervals[0] + octaveShiftSemitones.value(i))
+                    },
+                    \second, {
+                        doubledIntervals = doubledIntervals.add(doubledIntervals[1] + octaveShiftSemitones.value(i))
+                    },
+                    \third, {
+                        doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i))
+                    },
+                    \rootandsecond, {
+                        doubledIntervals = doubledIntervals.add(doubledIntervals[0] + octaveShiftSemitones.value(i));
+                        doubledIntervals = doubledIntervals.add(doubledIntervals[1] + octaveShiftSemitones.value(i));
+                    },
+                    \rootandthird, {
+                        doubledIntervals = doubledIntervals.add(doubledIntervals[0] + octaveShiftSemitones.value(i));
+                        doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i));
+                    },
+                    \secondandthird, {
+                        doubledIntervals = doubledIntervals.add(doubledIntervals[1] + octaveShiftSemitones.value(i));
+                        doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i));
+                    },
+                    \all, {
+                        doubledIntervals = doubledIntervals.add(doubledIntervals[0] + octaveShiftSemitones.value(i));
+                        doubledIntervals = doubledIntervals.add(doubledIntervals[1] + octaveShiftSemitones.value(i));
+                        doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i));
+                    }
+                );
+            };
 
-        // Sort
-        ^doubledIntervals.removeDuplicates.sort
+            // Sort and clean and return
+            ^this.prClean(doubledIntervals)
+        });
     }
 
     *invert{|intervals, patternType=\first, style=\up|
@@ -319,30 +349,39 @@ ChordOps{
             \none, { [0, 0, 0] }
         );
 
-        inversionPattern.do{|dist, index|
-            if (dist != 0) {
-                style.switch(
-                    \up, { invertedIntervals[index] = invertedIntervals[index] + (12 * dist) },
-                    \down, { invertedIntervals[index] = invertedIntervals[index] - (12 * dist) },
-                    \updown, {
-                        if (index % 2 == 0) {
-                            invertedIntervals[index] = invertedIntervals[index] + (12 * dist)
-                        } {
-                            invertedIntervals[index] = invertedIntervals[index] - (12 * dist)
-                        }
-                    },
-                    \downup, {
-                        if (index % 2 == 0) {
-                            invertedIntervals[index] = invertedIntervals[index] - (12 * dist)
-                        } {
-                            invertedIntervals[index] = invertedIntervals[index] + (12 * dist)
-                        }
-                    }
-                )
-            }
-        };
+        // Check if the pattern type is valid
+        if(this.inversionTypes.includes(patternType).not, {
+            "Invalid pattern type: %".format(patternType).error;
+            ^nil
+        }, {
 
-        ^invertedIntervals.removeDuplicates.sort
+
+            inversionPattern.do{|dist, index|
+                if (dist != 0) {
+                    style.switch(
+                        \up, { invertedIntervals[index] = invertedIntervals[index] + (12 * dist) },
+                        \down, { invertedIntervals[index] = invertedIntervals[index] - (12 * dist) },
+                        \updown, {
+                            if (index % 2 == 0) {
+                                invertedIntervals[index] = invertedIntervals[index] + (12 * dist)
+                            } {
+                                invertedIntervals[index] = invertedIntervals[index] - (12 * dist)
+                            }
+                        },
+                        \downup, {
+                            if (index % 2 == 0) {
+                                invertedIntervals[index] = invertedIntervals[index] - (12 * dist)
+                            } {
+                                invertedIntervals[index] = invertedIntervals[index] + (12 * dist)
+                            }
+                        }
+                    )
+                }
+            };
+
+            ^this.prClean(invertedIntervals)
+        });
+
     }
 
     *revert{|intervals, patternType, style|
