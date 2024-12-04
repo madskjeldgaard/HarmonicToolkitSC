@@ -235,6 +235,10 @@ Harmony{
         ^ChordOps.prClean(result)
     }
 
+    value {
+        ^this.get
+    }
+
     // Same as .addInversion but creates a copy of the instance and returns that
     withInversion{|patternType=\first, style=\up|
         ^this.copy.addInversion(patternType, style)

@@ -1,16 +1,17 @@
-# Harmonics
+# Harmonic Toolkit for SuperCollider
 
-### Harmonic operations
+This SuperCollider package makes it simple and practical to work with harmony theory without having to know harmony theory.
 
-Harmonic operations
+It can be used to easily turn melodies into chords/harmonies in a pattern or to harmonize incoming midi notes and turn whatever you play on your midi keyboard into chords. 
 
-### Installation
+You can also go the other way by turning a harmony/chord into an arpeggio.
+
+## Installation
 
 Open up SuperCollider and evaluate the following line of code:
 `Quarks.install("https://github.com/madskjeldgaard/harmonics")`
 
 ## Examples
-
 
 ### Patterns
 
@@ -33,7 +34,32 @@ Pdef(\simpleHarmony,
 )
 ```
 
-#### Harmonize incoming midi notes
+#### Pbind: Harmonize melody with random chord types
+
+```supercollider
+(
+// Random chord on each note
+var chords = Prand([\major7, \major9, \dominant7, \augmented, \halfDiminished7], inf);
+
+// Slowly change the melody 
+var melody = Pstep([0,-5,1,3], 16, inf);
+
+Pdef(\risingChords,
+    Pbind(
+        // Slowly ascend the scale
+        \degree, melody.trace(prefix: "degree: "),
+
+        // Harmonize it
+        \mtranspose, chords.collect{|chordName| chordName.asHarmony.get() }.trace(prefix: "chord: "),
+
+        \dur, 0.125,
+    )
+).play;
+
+)
+```
+
+#### MIDI: Harmonize incoming midi notes
 
 TODO
 
