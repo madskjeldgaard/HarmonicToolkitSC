@@ -47,6 +47,23 @@ h.addDouble(patternType: \root,  octaves: -2);
 
 All of these pattern examples use the `\mtranspose` key in Pbind to transpose each midi note using one of the harmonies chosen. This is neat because then you can write a melody in either `\degree` or `\midinote` and keep that melody seperate from your harmony.
 
+#### Pbind: Simple arpeggio
+
+```supercollider
+(
+var chordName = 'major7';
+
+// Harmonize a random melody with major 7 chords
+Pdef(\simpleArp,
+    Pbind(
+        \degree, Pstep([0,4,5,7], 4, inf),
+        \mtranspose, chordName.asHarmony.asPseq(inf),
+        \dur, 0.125,
+    )
+).play;
+)
+```
+
 #### Pbind: Harmonize a random melody
 
 ```supercollider
