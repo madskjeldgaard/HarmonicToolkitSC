@@ -120,13 +120,13 @@ SynthDef.new(\ambientNote, {
 
     sig = DFM1.ar(sig, cutoff, resonance);
 
-    sig = Pan2.ar(sig, pan.poll);
+    sig = Pan2.ar(sig, pan);
     Out.ar(0, sig * amp * env);
 }).add;
 
 // A reverb to make it washy
 SynthDef.new(\jpverb, {
-    arg in, xfade=0.3, predelay=0.1, revtime=42.0, damp=0.01, room=4.5;
+    arg in, xfade=0.5, predelay=0.1, revtime=42.0, damp=0.01, room=5;
     var dry = In.ar(in, 2);
     var sig = JPverb.ar(in: dry, t60: revtime, damp: damp, size: room);
 
@@ -137,7 +137,7 @@ SynthDef.new(\jpverb, {
 // Play random chords
 (
 var chordName = 'minor7';
-var harmony = chordName.asHarmony.withDouble(octaves: -1);
+var harmony = chordName.asHarmony.withDouble(octaves: -2);
 var numNotes = harmony.value.size;
 
 Pdef(\ambienty,
@@ -148,7 +148,8 @@ Pdef(\ambienty,
         \degree, Pwhite(-5,5,inf),
         \ctranspose, harmony,
         \dur, 32.0,
-        \pan, Pwhite(-1.0,1.0,inf).clump(numNotes)
+        \pan, Pwhite(-1.0,1.0,inf).clump(numNotes),
+        \legato, 1.05
     )
 ).play;
 )
