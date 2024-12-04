@@ -1,9 +1,5 @@
 /*
 
-TODO:
-- make doubling work in .get{}
-
-
 Example:
 
 (
