@@ -1,3 +1,5 @@
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X8X6RXV10)
+
 # Harmonic Toolkit for SuperCollider
 
 This SuperCollider package makes it simple and practical to work with harmony theory without having to know harmony theory.
