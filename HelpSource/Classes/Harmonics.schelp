@@ -1,39 +1,134 @@
-TITLE:: Harmonics
-summary:: Harmonic operations
+TITLE:: Harmony
+summary:: Represents a harmony with a set of harmonic intervals
 categories:: Extensions
 related:: Classes/Quarks
 
 DESCRIPTION::
-Harmonic operations
+The Harmony class provides tools for creating and manipulating harmonic intervals, including inversions, doublings, and transformations. It supports predefined harmonic structures like triads, seventh chords, and extended chords.
 
 CLASSMETHODS::
 
 METHOD:: new
-(describe method here)
+Creates a new Harmony instance.
 
-ARGUMENT:: arga
-(describe argument here)
+ARGUMENT:: intervals
+A symbol (e.g., \major) or an array of semitone offsets defining the harmony.
 
-ARGUMENT:: argb
-(describe argument here)
+returns:: A new Harmony instance.
 
-returns:: (describe returnvalue here)
+METHOD:: random
+Creates a Harmony instance with a random interval set.
+
+returns:: A Harmony instance with random intervals.
+
+METHOD:: randomTriad
+Creates a Harmony instance with a random triad (e.g., major, minor, diminished, augmented).
+
+returns:: A Harmony instance with a random triad.
+
+METHOD:: randomSeventh
+Creates a Harmony instance with a random seventh chord.
+
+returns:: A Harmony instance with a random seventh chord.
 
 INSTANCEMETHODS::
 
 METHOD:: init
-(describe method here)
+Initializes the Harmony instance.
 
-ARGUMENT:: arga
-(describe argument here)
+ARGUMENT:: intervals
+A symbol or array of semitone offsets defining the harmony.
 
-ARGUMENT:: argb
-(describe argument here)
+returns:: The initialized Harmony instance.
 
-returns:: (describe returnvalue here)
+METHOD:: addInversion
+Adds an inversion to the harmony.
+
+ARGUMENT:: patternType
+The inversion type (e.g., \first, \second). Default is \first.
+
+ARGUMENT:: style
+The inversion direction (e.g., \up, \down). Default is \up.
+
+returns:: The Harmony instance with the inversion applied.
+
+METHOD:: addDouble
+Adds a doubling of the root notes either below or above the original notes.
+
+ARGUMENT:: patternType
+The doubling type (e.g., \root, \second). Default is \root.
+
+ARGUMENT:: octaves
+The number of octaves to double. Negative values double below. Default is -1.
+
+returns:: The Harmony instance with the doubling applied.
+
+METHOD:: clearInversions
+Clears all inversions.
+
+returns:: The Harmony instance with inversions cleared.
+
+METHOD:: clearDoubles
+Clears all doublings.
+
+returns:: The Harmony instance with doublings cleared.
+
+METHOD:: get
+Returns the current harmony as an array of semitone offsets, applying inversions and doublings.
+
+returns:: An array of semitone offsets.
+
+METHOD:: withInversion
+Creates a copy of the Harmony instance with the specified inversion applied.
+
+ARGUMENT:: patternType
+The inversion type (e.g., \first, \second). Default is \first.
+
+ARGUMENT:: style
+The inversion direction (e.g., \up, \down). Default is \up.
+
+returns:: A new Harmony instance with the inversion applied.
+
+METHOD:: withDouble
+Creates a copy of the Harmony instance with the specified doubling applied.
+
+ARGUMENT:: patternType
+The doubling type (e.g., \root, \second). Default is \root.
+
+ARGUMENT:: octaves
+The number of octaves to double. Negative values double below. Default is 1.
+
+returns:: A new Harmony instance with the doubling applied.
 
 EXAMPLES::
 
 code::
-// some example code
+// Create a Harmony instance and apply operations:
+(
+var h = Harmony.new(\major);
+h.addInversion(\first, \up);
+h.addDouble(\root, 2);
+h.get;
+)
+
+// Use Harmony in a pattern:
+(
+var h = Harmony.new(\major);
+
+Pdef(\fast,
+    Pbind(
+        \octave, 4,
+        \degree, 0,
+        \mtranspose,
+        Pseq([
+            h.asPseq(4),
+            h.withInversion(\first, \up).asPseq(4),
+            h.withInversion(\second, \up).asPseq(4),
+            h.withInversion(\first, \down).asPseq(4),
+            h.withInversion(\second, \down).asPseq(4),
+        ], inf),
+        \dur, 0.125
+    )
+).play;
+)
 ::

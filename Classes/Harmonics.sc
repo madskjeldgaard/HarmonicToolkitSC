@@ -35,6 +35,7 @@ Pdef(\fast,
 )
 
 */
+
 // Represents a harmony with a set of harmonic intervals
 Harmony{
     classvar <all;
