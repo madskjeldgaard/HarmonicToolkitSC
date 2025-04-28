@@ -1,0 +1,80 @@
+TITLE:: PIntervalArp
+SUMMARY:: A pattern class for arpeggiating harmonic intervals with various styles
+CATEGORIES:: Patterns>Arpeggiation
+RELATED:: PIntervals, Harmony, ChordOps
+
+CLASSMETHODS::
+METHOD:: new
+Create a new PIntervalArp pattern
+
+ARGUMENT:: harmonies
+An array of Harmony objects or symbols representing harmonic intervals
+
+ARGUMENT:: arpStyles
+An array of symbols specifying arpeggiation styles (see below for available styles)
+
+Possible styles:
+
+LIST::
+
+## \chords - Play intervals as chords
+## \up - Bottom to top
+## \down - Top to bottom
+## \updown - Bottom to top and back
+## \downup - Top to bottom and back
+## \random - Random order
+## \upin - Lowest to highest, repeat inward
+## \inup - Highest to lowest, repeat inward
+## \downin - Highest to lowest, repeat inward
+## \blossomup - From center, spiral up
+## \blossomdown - From center, spiral down
+
+::
+
+RETURNS::
+A PIntervalArp pattern
+
+
+METHOD:: arpStyles
+List of available arpeggiation styles
+
+RETURNS::
+An array of symbols:
+
+
+INSTANCEMETHODS::
+METHOD:: embedInStream
+
+EXAMPLES::
+code::
+// Simple chord progression
+(
+Pbind(
+	\degree, Prand([0,2,4,5], inf),
+    \ctranspose, Pn(PIntervalArp([\major], [\chords])),
+    \dur, 0.5
+).play;
+)
+
+// Complex arpeggiation
+(
+Pbind(
+    \ctranspose, PIntervalArp(
+        [\major, \minor7, \diminished],
+        [\blossomup, \updown, \random]
+    ),
+    \dur, 0.125
+).play;
+)
+
+// Combining with other patterns
+(
+Pbind(
+    \ctranspose, Pseq([
+        PIntervalArp([\major], \up),
+        PIntervalArp([\major9], \blossomdown)
+    ], inf).trace,
+    \dur, 0.25
+).play;
+)
+::
