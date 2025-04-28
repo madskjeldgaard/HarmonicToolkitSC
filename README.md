@@ -17,6 +17,8 @@ Open up SuperCollider and evaluate the following line of code:
 
 ## Examples
 
+See the help files for more information.
+
 ### Simple
 
 A simple example of how to create a harmony and perform operations on it using inversions and doublings.
@@ -49,37 +51,44 @@ h.addDouble(patternType: \root,  octaves: -2);
 
 All of these pattern examples use the `\ctranspose` key in Pbind to transpose each midi note using one of the harmonies chosen. This is neat because then you can write a melody in either `\degree` or `\midinote` and keep that melody seperate from your harmony.
 
-#### Pbind: Simple arpeggio
-
-This package includes the class `PIntervalArp` which makes it easy to arpeggiate and play harmonies in patterns. 
-
-It includes different styles of arpeggiation. The class will wrap the values of both the harmonies and the arp styles, making it a fun way to explore harmonies in different combinations.
-
 ```supercollider
+// Simple chord progression
 (
-Pdef(\simpleArp,
-    Pbind(
-        \degree, 0,
-        \ctranspose, PIntervalArp(harmoniesArray: [\major7, Harmony.randomTriad], arpStyles: [\up, \chords, \down, \blossomup, \blossomdown]),
-        \dur, 0.125,
-    )
+Pbind(
+	\degree, Prand([0,2,4,5], inf),
+    \ctranspose, Pn(PIntervalArp(\major)),
+    \dur, 0.5
 ).play;
 )
-```
 
-#### Pbind: Harmonize a random melody
-
-
-```supercollider
+// Complex arpeggiation
 (
-// Harmonize a random melody with major 7 chords
-Pdef(\simpleHarmony,
-    Pbind(
-        \degree, Pwhite(0,5),
-        \ctranspose, \major7.asHarmony,
-        \dur, 0.125,
-    )
+Pbind(
+    \ctranspose, PIntervalArp(
+        [\major, \minor7, \diminished],
+        [\blossomup, \updown, \random]
+    ),
+    \dur, 0.125
 ).play;
+)
+
+// Combining with other patterns
+(
+Pbind(
+    \ctranspose, Pseq([
+
+        // Major chord
+        PIntervalArp(\major),
+
+        // Major 9
+        PIntervalArp(\major9),
+
+        // Major 9 with chord operations
+        PIntervalArp(Harmony(\major9).withDouble(\root, octaves: -1).withInversion(\first))
+    ], inf).trace,
+    \dur, 0.25
+).play;
+)
 )
 ```
 
@@ -133,51 +142,3 @@ Pdef(\ambienty,
 Synth.after(1, \jpverb)
 ```
 
-#### MIDI: Harmonize incoming midi notes
-
-TODO
-
-#### Advanced pattern example: Arpeggio with harmonized chords
-
-```supercollider
-/*
-
-An advanced example.
-
-This takes a melody and on each note plays an arpeggio of a major 7 chord.
-
-*/
-(
-// Choose a chord
-var h = \major7.asHarmony;
-
-// Play some inversions of the chord
-Pdef(\inversions,
-    Pbind(
-        \octave, 3,
-
-        // The melody to be harmonized
-        \degree, Pdup(64, Pseq([0,3,5], inf)),
-
-        // The harmonization of the melody flattened as arpeggeios
-        \ctranspose, Pseq([
-            h.asPseq(4),
-            h.withInversion(\first, \up).asPseq(4),
-            h.withInversion(\second, \up).asPseq(4),
-            h.withInversion(\edges, \up).asPseq(4),
-            h.withInversion(\third, \up).asPseq(4),
-            // h.withInversion(\second, \down).asPseq(4),
-        ], inf),
-
-        \dur, 0.125,
-
-        \legato, 0.5,
-    )
-).play;
-)
-
-
-// Now harmonize the arpeggio above
-// This takes the pattern above and plays harmonies on top of it
-Pdef(\inversionsOvertones, Pbindf(Pdef(\inversions), \octave, Pkey(\octave)+1, \ctranspose, Pkey(\ctranspose) + \major7.asHarmony.get() )).play;
-```

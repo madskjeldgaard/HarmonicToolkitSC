@@ -268,7 +268,7 @@ Harmony{
     }
 
     // Same as .addDouble but creates a copy of the instance and returns that
-    withDouble{|patternType=\root, octaves=1|
+    withDouble{|patternType=\root, octaves=(-1)|
         ^this.copy.addDouble(patternType, octaves)
     }
 
@@ -452,7 +452,7 @@ PIntervalArp : Pattern {
     var <>harmonies;
     var <>arpStyles;
 
-    *new { |harmoniesArray, arpStyles|
+    *new { |harmoniesArray, arpStyles=\chords|
         ^super.new.harmonies_(harmoniesArray)
             .arpStyles_(arpStyles)
     }

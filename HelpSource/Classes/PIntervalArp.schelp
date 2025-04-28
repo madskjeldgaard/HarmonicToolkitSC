@@ -67,12 +67,19 @@ Pbind(
 ).play;
 )
 
-// Combining with other patterns
+// Play different chords, from symbols or Harmony objects with chord operations
 (
 Pbind(
     \ctranspose, Pseq([
-        PIntervalArp(\major, \up),
-        PIntervalArp(\major9, \blossomdown)
+
+        // Major chord
+        PIntervalArp(\major),
+
+        // Major 9
+        PIntervalArp(\major9),
+
+        // Major 9 with chord operations
+        PIntervalArp(Harmony(\major9).withDouble(\root, octaves: -1).withInversion(\first))
     ], inf).trace,
     \dur, 0.25
 ).play;
