@@ -8,10 +8,10 @@ METHOD:: new
 Create a new PIntervalArp pattern
 
 ARGUMENT:: harmonies
-An array of Harmony objects or symbols representing harmonic intervals
+A harmony or symbol representing a harmony, or an array of the same.
 
 ARGUMENT:: arpStyles
-An array of symbols specifying arpeggiation styles (see below for available styles)
+A symbol, or an array of symbols.
 
 Possible styles:
 
@@ -71,8 +71,8 @@ Pbind(
 (
 Pbind(
     \ctranspose, Pseq([
-        PIntervalArp([\major], \up),
-        PIntervalArp([\major9], \blossomdown)
+        PIntervalArp(\major, \up),
+        PIntervalArp(\major9, \blossomdown)
     ], inf).trace,
     \dur, 0.25
 ).play;

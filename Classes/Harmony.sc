@@ -477,6 +477,14 @@ PIntervalArp : Pattern {
         var combineWith, combined;
         var harmoniesLargest = (harmonies.asArray.size > arpStyles.asArray.size);
 
+        if(this.harmonies.class != Array, {
+            this.harmonies =  this.harmonies.asArray;
+        });
+
+        if(this.arpStyles.class != Array, {
+            this.arpStyles =  this.arpStyles.asArray;
+        });
+
         if(harmoniesLargest, {
                 combined = this.harmonies.asArray.collect{|harm, index| [harm, this.arpStyles.wrapAt(index)] };
         }, {
