@@ -16,6 +16,12 @@ A symbol (e.g., \major) or an array of semitone offsets defining the harmony.
 
 returns:: A new Harmony instance.
 
+METHOD:: harmonyNames
+
+Returns a list of all available default harmony names
+
+returns:: Array
+
 METHOD:: random
 Creates a Harmony instance with a random interval set.
 
@@ -47,8 +53,11 @@ Adds an inversion to the harmony.
 ARGUMENT:: patternType
 The inversion type (e.g., \first, \second). Default is \first.
 
+To see all available inversions, run code::ChordOps.inversionTypes()::
+
 ARGUMENT:: style
-The inversion direction (e.g., \up, \down). Default is \up.
+The inversion direction (e.g., \up, \down). Default is \up. Other options are
+\down, \updown, \downup.
 
 returns:: The Harmony instance with the inversion applied.
 
@@ -57,6 +66,8 @@ Adds a doubling of the root notes either below or above the original notes.
 
 ARGUMENT:: patternType
 The doubling type (e.g., \root, \second). Default is \root.
+
+To see all available types, run code::ChordOps.doublingTypes()::
 
 ARGUMENT:: octaves
 The number of octaves to double. Negative values double below. Default is -1.

@@ -51,15 +51,16 @@ All of these pattern examples use the `\ctranspose` key in Pbind to transpose ea
 
 #### Pbind: Simple arpeggio
 
+This package includes the class `PIntervalArp` which makes it easy to arpeggiate and play harmonies in patterns. 
+
+It includes different styles of arpeggiation. The class will wrap the values of both the harmonies and the arp styles, making it a fun way to explore harmonies in different combinations.
+
 ```supercollider
 (
-var chordName = 'major7';
-
-// Harmonize a random melody with major 7 chords
 Pdef(\simpleArp,
     Pbind(
-        \degree, Pstep([0,4,5,7], 4, inf),
-        \ctranspose, chordName.asHarmony.asPseq(inf),
+        \degree, 0,
+        \ctranspose, PIntervalArp(harmoniesArray: [\major7, Harmony.randomTriad], arpStyles: [\up, \chords, \down, \blossomup, \blossomdown]),
         \dur, 0.125,
     )
 ).play;
@@ -68,43 +69,17 @@ Pdef(\simpleArp,
 
 #### Pbind: Harmonize a random melody
 
+
 ```supercollider
 (
-var chordName = 'major7';
-
 // Harmonize a random melody with major 7 chords
 Pdef(\simpleHarmony,
     Pbind(
         \degree, Pwhite(0,5),
-        \ctranspose, chordName.asHarmony,
+        \ctranspose, \major7.asHarmony,
         \dur, 0.125,
     )
 ).play;
-)
-```
-
-#### Pbind: Harmonize melody with random chord types
-
-```supercollider
-(
-// Random chord on each note
-var chords = Prand([\major7, \major9, \dominant7, \augmented, \halfDiminished7], inf);
-
-// Slowly change the melody 
-var melody = Pstep([0,-5,1,3], 16, inf);
-
-Pdef(\risingChords,
-    Pbind(
-        // Slowly ascend the scale
-        \degree, melody.trace(prefix: "degree: "),
-
-        // Harmonize it
-        \ctranspose, chords.collect{|chordName| chordName.asHarmony.get() }.trace(prefix: "chord: "),
-
-        \dur, 0.125,
-    )
-).play;
-
 )
 ```
 

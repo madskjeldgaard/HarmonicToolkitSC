@@ -146,6 +146,10 @@ Harmony{
         ^this.all
     }
 
+    *harmonyNames{
+        ^this.all.keys.asArray
+    }
+
     *at{|name|
         var interval = this.all[name];
 
@@ -272,6 +276,9 @@ Harmony{
         ^this.get.asStream()
     }
 
+    asHarmony {
+        ^this
+    }
 }
 
 
@@ -366,8 +373,6 @@ ChordOps{
             "Invalid pattern type: %".format(patternType).error;
             nil
         }, {
-
-
             inversionPattern.do{|dist, index|
                 if (dist != 0) {
                     style.switch(
@@ -409,6 +414,151 @@ ChordOps{
 
 }
 
+// Turn Harmonys into intervals in a pattern
+/*
+
+Example:
+
+p = PIntervals(\major7, \dominant7, Harmony.randomTriad, Harmony([0,5, 10])).asStream
+p.next
+
+*/
+PIntervals : Pattern {
+    var <>harmonies;
+
+    *new { |...harmonies|
+        harmonies = harmonies.collect{|harm| harm.asHarmony };
+        ^super.new.harmonies_(harmonies)
+    }
+
+    embedInStream { |inval|
+        harmonies.do{|harm|
+            var harmonyArray = harm.get();
+
+            if (harmonyArray.isNil) {
+                Error("Harmony key '%' not found in Harmony.all".format(harm)).throw;
+            };
+
+            inval = harmonyArray.embedInStream(inval);
+
+        }
+
+        ^inval;
+    }
+}
+
+// Turn Harmonys into intervals in a pattern by turning
+PIntervalArp : Pattern {
+    var <>harmonies;
+    var <>arpStyles;
+
+    *new { |harmoniesArray, arpStyles|
+        ^super.new.harmonies_(harmoniesArray)
+            .arpStyles_(arpStyles)
+    }
+
+    *arpStyles{
+        ^[
+            \chords, // Play intervals as chords.
+            \up, // bottom to top
+            \down, // top to bottom
+            \updown, // bottom to top and back
+            \downup, // top to bottom and back
+            \random, // random order
+            \upin, // lowest to highest, repeat inward
+            \inup, // highest to lowest, repeat inward
+            \downin, // highest to lowest, repeat inward
+            \blossomup, // from center, spiral up
+            \blossomdown, // from center, spiral down
+        ]
+    }
+
+    embedInStream {|inval|
+        var combineWith, combined;
+        var harmoniesLargest = (harmonies.asArray.size > arpStyles.asArray.size);
+
+        if(harmoniesLargest, {
+                combined = this.harmonies.asArray.collect{|harm, index| [harm, this.arpStyles.wrapAt(index)] };
+        }, {
+                combined = this.arpStyles.asArray.collect{|arpStyle, index| [this.harmonies.wrapAt(index), arpStyle] };
+        });
+
+
+        combined.do{|harmPair|
+            var harm = harmPair.first.asHarmony;
+            var arpStyle = harmPair[1];
+            var harmonyArray = harm.get();
+            var arp;
+
+            if (harmonyArray.isNil) {
+                Error("Harmony key '%' not found in Harmony.all".format(harm)).throw;
+            };
+
+            arp = this.class.prArpeggiateHarmony(arpStyle, harm);
+            inval = arp.embedInStream(inval);
+        }
+
+        ^inval;
+
+    }
+
+    *prArpeggiateHarmony{|arpStyle, harmony|
+
+        // Check if the pattern type is valid
+        if(this.arpStyles.includes(arpStyle).not, {
+            "Invalid pattern type: %".format(arpStyle).error;
+            ^nil
+        });
+
+        ^switch(
+            arpStyle,
+                \chords, {
+                    harmony.get()
+                },
+                \up, {
+                    harmony.asPseq(repeats: 1)
+                },
+                \down, {
+                    var listSeq = harmony.get().reverse;
+                    Pseq(listSeq, repeats: 1)
+                },
+                \updown, {
+                    var up = harmony.get();
+                    var down = up.reverse;
+                    Pseq((up++down), repeats: 1)
+                },
+                \downup, {
+                    var up = harmony.get();
+                    var down = up.reverse;
+                    Pseq((down++up), repeats: 1)
+                },
+
+                \random, {
+                    harmony.asPxrand(repeats: harmony.get().size);
+                },
+                \upin, {
+                // Repeatedly get the lowest, then the highest, and repeat the process inward until out of values. Inspired by Bitwig's "Up+In"
+                    var listSeq = harmony.get().upIn;
+
+                    Pseq(listSeq, repeats: 1)
+
+                },
+                \inup,{
+                var listSeq = harmony.get().inUp;
+                    Pseq(listSeq, repeats: 1)
+                },
+                \blossomup, {
+                var listSeq = harmony.get().blossomUp();
+                    Pseq(listSeq, repeats: 1)
+                },
+                \blossomdown, {
+                var listSeq = harmony.get().blossomDown();
+                    Pseq(listSeq, repeats: 1)
+                }
+          )
+    }
+}
+
 +Array{
     harmonicDouble{|patternType=\root, octaves=1|
         ^ChordOps.double(this, patternType, octaves)
@@ -421,6 +571,102 @@ ChordOps{
     harmonicRevert{|patternType, style|
         ^ChordOps.revert(this, patternType, style)
     }
+
+    asHarmony{
+        ^Harmony.new(this)
+    }
+
+    // Lowest to highest
+    upIn{
+        var arr = this;
+        var firstSize = arr.size;
+        var outArray = Array.new();
+
+        while({arr.size > 0}) {
+                var low = arr.minItem;
+                var high;
+
+                if(low.notNil, {
+                    outArray = outArray.add(low);
+                    arr = arr.reject({|item, i| (item === low) });
+                });
+
+                high = arr.maxItem;
+                if(high.notNil, {
+                    outArray = outArray.add(high);
+                    arr = arr.reject({|item, i| (item === high) });
+                });
+
+        };
+
+
+        ^outArray
+    }
+
+    // Higest to lowest
+    inUp{
+        var arr = this;
+        var firstSize = arr.size;
+        var outArray = Array.new();
+
+        while({arr.size > 0}) {
+            var low = arr.maxItem;
+            var high;
+
+            if(low.notNil, {
+                    outArray = outArray.add(low);
+                    arr = arr.reject({|item, i| (item === low) });
+                    });
+
+            high = arr.minItem;
+            if(high.notNil, {
+                    outArray = outArray.add(high);
+                    arr = arr.reject({|item, i| (item === high) });
+                    });
+
+        };
+
+        ^outArray
+    }
+
+    // Spiral up from the center
+    blossomUp{
+        var array = this;
+        var sorted = array.sort;
+        var middleIndex = (sorted.size / 2).floor;
+        var result = [sorted[middleIndex]];
+        var left = middleIndex - 1;
+        var right = middleIndex + 1;
+
+        while { left >= 0 or: { right < sorted.size } } {
+            if (right < sorted.size) { result = result.add(sorted[right]) };
+            if (left >= 0) { result = result.add(sorted[left]) };
+            left = left - 1;
+            right = right + 1;
+        };
+
+        ^result;
+    }
+
+    // Same as above but other direction
+    blossomDown{
+        var array = this;
+        var sorted = array.sort;
+        var middleIndex = (sorted.size / 2).floor;
+        var result = [sorted[middleIndex]];
+        var left = middleIndex - 1;
+        var right = middleIndex + 1;
+
+        while { left >= 0 or: { right < sorted.size } } {
+            if (left >= 0) { result = result.add(sorted[left]) };
+            if (right < sorted.size) { result = result.add(sorted[right]) };
+            left = left - 1;
+            right = right + 1;
+        };
+
+        ^result;
+    }
+
 }
 
 // Arpeggiate a harmony
@@ -447,6 +693,10 @@ z.next()
 
     asPshuffle{|repeats=inf|
         ^Pshuffle.new(this.get, repeats)
+    }
+
+    asPtuple{|repeats=inf|
+        ^Ptuple.new(this.get, repeats)
     }
 }
 
