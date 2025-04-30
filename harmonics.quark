@@ -4,7 +4,10 @@
   version: "0.001",
   schelp: "Harmonics.schelp",
   dependencies: [
-      "ddwCommon"
+      "ddwCommon",
+      "https://github.com/n-armstrong/fosc",
+      "JoshMisc",
+      "wslib"
   ],
   license: "GNU GPL v3.0",
   copyright: "madskjeldgaard",
