@@ -1,9 +1,10 @@
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X8X6RXV10)
 
-
 # Harmonic Toolkit for SuperCollider
 
-![schoenberg glowing](schoenberg.jpg) 
+<img src="schoenberg.jpg" width="350" />
+
+*Schoenberg – the harmonic hacker of the 20th century*
 
 This SuperCollider package makes it simple and practical to work with harmony theory without having to know harmony theory.
 
@@ -12,6 +13,16 @@ It simplifies thinking around harmony, arpeggiation, chords and intervals to mak
 A harmony in the context of this toolkit is simply an array of semi tone offsets (or midinotes). These can then be transformed using conventional harmonic operations like doubling (adding octaves above or below) or inversions of the root notes of the chords. 
 
 See the help files for more information.
+
+## Features
+
+- Create a harmony from an interval name like `major7` or `P5` (perfect 5th) or a list of semitone offsets like `[0, 4, 7]`. See helpfile for `Harmony` for more information.
+- Harmonic operations 
+    - Octave doublings: Add octaves above or below the root note of the harmony with many different patterns of doublings across octaves, eg `\root` to just double the root of the harmony or `\rootandthird` to double the root and the third note in the harmony.
+    - Inversions: Invert the harmony using a variety of inversion patterns, eg `\first` to invert the first note or for example `edges` to invert the first and last notes of the harmony. Also includes different "styles" of inversions, eg `\up` to invert the harmony up or `\down` to invert the harmony down.
+    - Operations are non-destructive – one `Harmony` object can be used to create many different harmonies or mutated back to the original harmony before operations.
+- Arpeggiation: Easily turn harmonies into arpeggios. All commonly used patterns are included. See helpfile for `PIntervalArp` for more information.
+- Pattern helper classes to easily compose with harmonies in patterns. 
 
 ## Installation
 
