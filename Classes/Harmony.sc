@@ -279,6 +279,11 @@ Harmony{
     asHarmony {
         ^this
     }
+
+    asMidiNoteNumbers{|midiNoteOffset=60|
+        ^this.get.collect{|interval| interval + midiNoteOffset};
+    }
+
 }
 
 
