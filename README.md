@@ -104,7 +104,7 @@ Pbind(
 )
 ```
 
-#### Ambient machine
+### Ambient machine
 
 ```supercollider
 (
