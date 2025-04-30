@@ -1,14 +1,17 @@
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X8X6RXV10)
 
+
 # Harmonic Toolkit for SuperCollider
+
+![schoenberg glowing](schoenberg.jpg) 
 
 This SuperCollider package makes it simple and practical to work with harmony theory without having to know harmony theory.
 
-It can be used to easily turn melodies into chords/harmonies in a pattern or to harmonize incoming midi notes and turn whatever you play on your midi keyboard into chords. 
-
-You can also go the other way by turning a harmony/chord into an arpeggio.
+It simplifies thinking around harmony, arpeggiation, chords and intervals to make it easier to compose music based on harmonic thinking. 
 
 A harmony in the context of this toolkit is simply an array of semi tone offsets (or midinotes). These can then be transformed using conventional harmonic operations like doubling (adding octaves above or below) or inversions of the root notes of the chords. 
+
+See the help files for more information.
 
 ## Installation
 
@@ -16,8 +19,6 @@ Open up SuperCollider and evaluate the following line of code:
 `Quarks.install("https://github.com/madskjeldgaard/harmonics")`
 
 ## Examples
-
-See the help files for more information.
 
 ### Simple
 
@@ -118,7 +119,7 @@ SynthDef.new(\jpverb, {
 }).add;
 )
 
-// Play random chords
+// Harmonize a random melody with minor 7th chords with octave doublings for that thick, ambient sound.
 (
 var chordName = 'minor7';
 var harmony = chordName.asHarmony.withDouble(octaves: -2);
@@ -138,7 +139,7 @@ Pdef(\ambienty,
 ).play;
 )
 
-// Add reverb
+// Add some swishy swashy reverb
 Synth.after(1, \jpverb)
 ```
 
