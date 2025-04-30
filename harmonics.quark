@@ -3,7 +3,9 @@
   summary: "Harmonic operations",
   version: "0.001",
   schelp: "Harmonics.schelp",
-  dependencies: nil,
+  dependencies: [
+      "ddwCommon"
+  ],
   license: "GNU GPL v3.0",
   copyright: "madskjeldgaard",
   ext_dependency: nil,
