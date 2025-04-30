@@ -21,7 +21,7 @@ See the help files for more information.
     - Octave doublings: Add octaves above or below the root note of the harmony with many different patterns of doublings across octaves, eg `\root` to just double the root of the harmony or `\rootandthird` to double the root and the third note in the harmony.
     - Inversions: Invert the harmony using a variety of inversion patterns, eg `\first` to invert the first note or for example `edges` to invert the first and last notes of the harmony. Also includes different "styles" of inversions, eg `\up` to invert the harmony up or `\down` to invert the harmony down.
     - Operations are non-destructive – one `Harmony` object can be used to create many different harmonies or mutated back to the original harmony before operations.
-- Arpeggiation: Easily turn harmonies into arpeggios. All commonly used patterns are included. See helpfile for `PIntervalArp` for more information.
+- Arpeggiation: Easily turn harmonies into arpeggios. All commonly used patterns are included. See helpfile for `PHarmony` for more information.
 - Pattern helper classes to easily compose with harmonies in patterns. 
 
 ## Installation
@@ -68,7 +68,7 @@ All of these pattern examples use the `\ctranspose` key in Pbind to transpose ea
 (
 Pbind(
 	\degree, Prand([0,2,4,5], inf),
-    \ctranspose, Pn(PIntervalArp(\major)),
+    \ctranspose, Pn(PHarmony(\major)),
     \dur, 0.5
 ).play;
 )
@@ -76,7 +76,7 @@ Pbind(
 // Complex arpeggiation
 (
 Pbind(
-    \ctranspose, PIntervalArp(
+    \ctranspose, PHarmony(
         [\major, \minor7, \diminished],
         [\blossomup, \updown, \random]
     ),
@@ -90,13 +90,13 @@ Pbind(
     \ctranspose, Pseq([
 
         // Major chord
-        PIntervalArp(\major),
+        PHarmony(\major),
 
         // Major 9
-        PIntervalArp(\major9),
+        PHarmony(\major9),
 
         // Major 9 with chord operations
-        PIntervalArp(Harmony(\major9).withDouble(\root, octaves: -1).withInversion(\first))
+        PHarmony(Harmony(\major9).withDouble(\root, octaves: -1).withInversion(\first))
     ], inf).trace,
     \dur, 0.25
 ).play;

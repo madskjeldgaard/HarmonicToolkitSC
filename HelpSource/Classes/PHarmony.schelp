@@ -1,11 +1,11 @@
-TITLE:: PIntervalArp
+TITLE:: PHarmony
 SUMMARY:: A pattern class for arpeggiating harmonic intervals with various styles
 CATEGORIES:: Patterns>Arpeggiation
 RELATED:: PIntervals, Harmony, ChordOps
 
 CLASSMETHODS::
 METHOD:: new
-Create a new PIntervalArp pattern
+Create a new PHarmony pattern
 
 ARGUMENT:: harmonies
 A harmony or symbol representing a harmony, or an array of the same.
@@ -32,7 +32,7 @@ LIST::
 ::
 
 RETURNS::
-A PIntervalArp pattern
+A PHarmony pattern
 
 
 METHOD:: arpStyles
@@ -51,7 +51,7 @@ code::
 (
 Pbind(
 	\degree, Prand([0,2,4,5], inf),
-    \ctranspose, Pn(PIntervalArp([\major], [\chords])),
+    \ctranspose, Pn(PHarmony([\major], [\chords])),
     \dur, 0.5
 ).play;
 )
@@ -59,7 +59,7 @@ Pbind(
 // Complex arpeggiation
 (
 Pbind(
-    \ctranspose, PIntervalArp(
+    \ctranspose, PHarmony(
         [\major, \minor7, \diminished],
         [\blossomup, \updown, \random]
     ),
@@ -73,13 +73,13 @@ Pbind(
     \ctranspose, Pseq([
 
         // Major chord
-        PIntervalArp(\major),
+        PHarmony(\major),
 
         // Major 9
-        PIntervalArp(\major9),
+        PHarmony(\major9),
 
         // Major 9 with chord operations
-        PIntervalArp(Harmony(\major9).withDouble(\root, octaves: -1).withInversion(\first))
+        PHarmony(Harmony(\major9).withDouble(\root, octaves: -1).withInversion(\first))
     ], inf).trace,
     \dur, 0.25
 ).play;

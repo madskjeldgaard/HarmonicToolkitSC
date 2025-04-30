@@ -1,15 +1,15 @@
 TITLE:: PIntervals
 SUMMARY:: A pattern class for sequencing through harmonic intervals
 CATEGORIES:: Patterns>Harmony
-RELATED:: PIntervalArp, Harmony, ChordOps
+RELATED:: PHarmony, Harmony, ChordOps
 
 CLASSMETHODS::
 METHOD:: new
 Create a new PIntervals pattern
 
-The PIntervalArp and PIntervals classes work with the Harmony class to provide musical interval patterns.
+The PHarmony and PIntervals classes work with the Harmony class to provide musical interval patterns.
 
-PIntervals simply sequences through the intervals of each harmony in order, while PIntervalArp applies various arpeggiation patterns to the intervals.
+PIntervals simply sequences through the intervals of each harmony in order, while PHarmony applies various arpeggiation patterns to the intervals.
 
 Both classes accept either Harmony objects or symbols that can be converted to Harmony objects (like \major, \minor7, etc.).
 

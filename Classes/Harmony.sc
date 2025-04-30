@@ -448,7 +448,7 @@ PIntervals : Pattern {
 }
 
 // Turn Harmonys into intervals in a pattern by turning
-PIntervalArp : Pattern {
+PHarmony : Pattern {
     var <>harmonies;
     var <>arpStyles;
 
