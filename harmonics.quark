@@ -4,7 +4,7 @@
   version: "0.001",
   schelp: "Harmonics.schelp",
   dependencies: [
-      "ddwCommon",
+      "https://github.com/supercollider-quarks/ddwCommon",
       "https://github.com/n-armstrong/fosc",
       "JoshMisc",
       "wslib"
