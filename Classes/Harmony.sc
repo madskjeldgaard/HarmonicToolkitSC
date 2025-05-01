@@ -186,7 +186,7 @@ Harmony{
 
     init{|intervals|
 
-        if(intervals.isSymbol, {
+        if(intervals.class == Symbol, {
             intervals = this.class.at(intervals)
         });
 
