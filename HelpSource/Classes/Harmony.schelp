@@ -122,6 +122,23 @@ h.addDouble(\root, 2);
 h.get;
 )
 
+// Convert harmony to midi notes and play to midi out
+// Setup MIDI
+MIDIClient.init;
+m = MIDIOut.newByName("IAC Driver", "Bus 1");
+
+(
+// Make a harmony and convert to midi note numbers
+~chord = \major7.asHarmony.withDouble(octaves: -2).asMidiNoteNumbers();
+
+Routine({
+    ~chord.do{|midiNoteNum|
+        var chan = 0;
+        m.noteOn(chan, midiNoteNum, 100).postln; 0.1.wait; m.noteOff(chan, midiNoteNum); 0.1.wait;
+    }
+}).play;
+)
+
 // Use Harmony in a pattern:
 (
 var h = Harmony.new(\major);
