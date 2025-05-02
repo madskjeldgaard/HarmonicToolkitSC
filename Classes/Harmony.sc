@@ -284,6 +284,9 @@ Harmony{
         ^this.get.collect{|interval| interval + midiNoteOffset};
     }
 
+    asPHarmony{|arpStyles=\chords, midiNoteOffset=0|
+        ^PHarmony(harmoniesArray: this, arpStyles: arpStyles, midiNoteOffset:midiNoteOffset)
+    }
 }
 
 
@@ -456,10 +459,12 @@ PIntervals : Pattern {
 PHarmony : Pattern {
     var <>harmonies;
     var <>arpStyles;
+    var <>midiNoteOffset;
 
-    *new { |harmoniesArray, arpStyles=\chords|
+    *new { |harmoniesArray, arpStyles=\chords, midiNoteOffset=0|
         ^super.new.harmonies_(harmoniesArray)
             .arpStyles_(arpStyles)
+            .midiNoteOffset_(midiNoteOffset)
     }
 
     *arpStyles{
@@ -507,7 +512,7 @@ PHarmony : Pattern {
                 Error("Harmony key '%' not found in Harmony.all".format(harm)).throw;
             };
 
-            arp = this.class.prArpeggiateHarmony(arpStyle, harm);
+            arp = this.class.prArpeggiateHarmony(arpStyle, harm) + midiNoteOffset;
             inval = arp.embedInStream(inval);
         }
 
@@ -569,6 +574,171 @@ PHarmony : Pattern {
                     Pseq(listSeq, repeats: 1)
                 }
           )
+    }
+}
+
+// Turn a string of roman numerals into a sequential chord progression
+/*
+(
+p = PChordProgression("i IV ii", 48);
+z = p.asStream;
+
+z.next;
+z.next
+z.next
+)
+
+// Pbind example
+(
+s.waitForBoot{
+    Pbind(
+        \midinote, PChordProgression(
+            chords: "i IV ii",
+            midiNoteOffset: 48,
+            arpStyle: \chords,
+            repeats: inf
+        ),
+        \dur, 0.25,
+    ).play
+}
+)
+
+*/
+PChordProgression : Pattern {
+    var <>romanChords;
+    var <>midiNoteOffset;
+    var <>repeats;
+    var <>arpStyle;
+
+    *new { |chords, midiNoteOffset=48, arpStyle=\chords, repeats=inf|
+        ^super.new.romanChords_(chords.romanChords)
+            .midiNoteOffset_(midiNoteOffset)
+            .repeats_(repeats)
+            .arpStyle_(arpStyle)
+    }
+
+    embedInStream {|inval|
+        var romanChords = this.romanChords;
+
+        repeats.do{
+            romanChords.do{|chord|
+                var harmony = chord[0];
+                var pitchOffset = chord[1];
+                var harmonyPattern = harmony.asPHarmony(arpStyle, midiNoteOffset: pitchOffset + midiNoteOffset);
+
+                inval = harmonyPattern.embedInStream(inval);
+            }
+        }
+
+        ^inval;
+    }
+}
+
+// Representation of roman numerals. Basically just a global dictionary where the key is a roman numeral, and the value is an Event with the Harmony and the pitch offset according to it's number
+RomanChords{
+    classvar <all;
+
+    *initClass{
+
+        // Make sure it inializes after the Harmony class
+        Class.initClassTree(Harmony);
+
+
+        all = [
+            // Triads
+            \I -> [Harmony.new(\major), 0],
+            \i -> [Harmony.new(\minor), 0],
+
+            \II -> [Harmony.new(\major), 2],
+            \ii -> [Harmony.new(\minor), 2],
+
+            \III -> [Harmony.new(\major), 4],
+            \iii -> [Harmony.new(\minor), 4],
+
+            \IV -> [Harmony.new(\major), 5],
+            \iv -> [Harmony.new(\minor), 5],
+
+            \V -> [Harmony.new(\major), 7],
+            \v -> [Harmony.new(\minor), 7],
+
+            \VI -> [Harmony.new(\major), 9],
+            \vi -> [Harmony.new(\minor), 9],
+
+            \VII -> [Harmony.new(\major), 11],
+            \vii -> [Harmony.new(\diminished), 11],
+
+            // Sevenths
+            \I7 -> [Harmony.new(\major7), 0],
+            \i7 -> [Harmony.new(\minor7), 0],
+            \II7 -> [Harmony.new(\major7), 2],
+            \ii7 -> [Harmony.new(\minor7), 2],
+            \III7 -> [Harmony.new(\major7), 4],
+            \iii7 -> [Harmony.new(\minor7), 4],
+            \IV7 -> [Harmony.new(\major7), 5],
+            \iv7 -> [Harmony.new(\minor7), 5],
+            \V7 -> [Harmony.new(\dominant7), 7],
+            \v7 -> [Harmony.new(\minor7), 7],
+
+        ].asDict;
+    }
+
+    *at{|name|
+        ^this.all[name]
+    }
+}
+
+// Parse a string as a roman numeral
++Symbol{
+    parseRomanChord{
+        var harmony, pitchOffset;
+        var romanChord = RomanChords.at(this);
+
+        if(romanChord.isNil, {
+            "Invalid roman numeral: %".format(this).error;
+            ^nil
+        });
+
+        harmony = romanChord[0];
+        pitchOffset = romanChord[1];
+
+        ^[harmony, pitchOffset];
+    }
+}
+
++String{
+    parseRomanChord{
+        ^this.asSymbol.parseRomanChord;
+    }
+
+    romanChords{
+        var tokens = this.split(Char.space);
+        var romanChords = [];
+
+        tokens.do{|token|
+            var romanChord = token.parseRomanChord;
+
+            if(romanChord.isNil, {
+                "Invalid roman numeral: %".format(token).error;
+                ^nil
+            });
+
+            romanChords = romanChords.add(romanChord);
+        };
+
+        ^romanChords;
+    }
+
+    romanChordsMidiNotes{|withMidiNoteOffset=0|
+        var romanChords = this.romanChords;
+
+        ^romanChords.collect{|chord|
+            var harmony = chord[0];
+            var pitchOffset = chord[1];
+
+            var midiNotes = harmony.asMidiNoteNumbers(pitchOffset);
+
+            midiNotes.collect{|note| note + pitchOffset} + withMidiNoteOffset;
+        };
     }
 }
 

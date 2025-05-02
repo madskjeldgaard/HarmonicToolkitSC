@@ -12,6 +12,8 @@ It simplifies thinking around harmony, arpeggiation, chords and intervals to mak
 
 A harmony in the context of this toolkit is simply an array of semi tone offsets (or midinotes). These can then be transformed using conventional harmonic operations like doubling (adding octaves above or below) or inversions of the root notes of the chords. 
 
+This toolkit is based on western music theory. If you have ideas on how to expand beyond that, please open an issue or a pull request.
+
 See the help files for more information.
 
 ## Features
@@ -22,6 +24,7 @@ See the help files for more information.
     - Inversions: Invert the harmony using a variety of inversion patterns, eg `\first` to invert the first note or for example `edges` to invert the first and last notes of the harmony. Also includes different "styles" of inversions, eg `\up` to invert the harmony up or `\down` to invert the harmony down.
     - Operations are non-destructive – one `Harmony` object can be used to create many different harmonies or mutated back to the original harmony before operations.
 - Arpeggiation: Easily turn harmonies into arpeggios. All commonly used patterns are included. See helpfile for `PHarmony` for more information.
+- Chord progressions: Convert a string of roman numerals to a chord progression, eg `"I ii V7 I"`. This is done using the `PChordProgression` class. See helpfile for `PChordProgression` for more information.
 - Pattern helper classes to easily compose with harmonies in patterns. 
 
 ## Installation
@@ -101,6 +104,25 @@ Pbind(
     \dur, 0.25
 ).play;
 )
+)
+```
+
+### Patterns: Chord progressions
+
+```supercollider
+(
+
+s.waitForBoot{
+    Pbind(
+        \midinote, PChordProgression(
+            chords: "I V vi IV", 
+            midiNoteOffset: 48,
+            arpStyle: \chords,
+            repeats: inf
+        ),
+        \dur, 0.25,
+    ).play
+}
 )
 ```
 

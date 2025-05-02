@@ -1,0 +1,78 @@
+TITLE:: PChordProgression
+SUMMARY:: A pattern for generating chord progressions based on Roman numeral notation.
+CATEGORIES:: Patterns>Arpeggiation
+RELATED:: Classes/PIntervals, Classes/Harmony, Classes/ChordOps
+
+DESCRIPTION::
+
+PChordProgression is a pattern class that allows you to define chord progressions using Roman numeral notation. It converts the Roman numerals into harmonies and generates MIDI note sequences based on the specified parameters.
+
+CLASSMETHODS::
+
+METHOD::new
+Creates a new PChordProgression instance.
+
+ARGUMENT:: chords
+A string of Roman numerals representing the chord progression (e.g., "i IV ii7").
+
+ARGUMENT:: midiNoteOffset
+
+The base MIDI note offset for the chords. Default: 48.
+
+ARGUMENT:: arpStyle
+
+The arpeggiation style for the chords. Default: \chords.
+
+
+ARGUMENT:: repeats
+
+The number of times to repeat the progression. Default: inf.
+
+EXAMPLES::
+
+code::
+(
+s.waitForBoot {
+	Pbind(
+		\midinote, PChordProgression(
+			chords: "i IV ii",
+			midiNoteOffset: 48,
+			arpStyle: \chords,
+			repeats: inf
+		),
+		\dur, 0.25
+	).play;
+}
+)
+
+// Arpeggiated Progression:
+(
+s.waitForBoot {
+	Pbind(
+		\midinote, PChordProgression(
+			chords: "i IV ii",
+			midiNoteOffset: 48,
+			arpStyle: \updown,
+			repeats: inf
+		),
+		\dur, 0.125
+	).play;
+}
+)
+
+// Custom MIDI Note Offset
+(
+p = PChordProgression(
+	chords: "i IV ii",
+	midiNoteOffset: 60,
+	arpStyle: \random,
+	repeats: 4
+);
+
+z = p.asStream;
+
+z.next.postln; // Outputs the next chord with the custom offset
+z.next.postln;
+z.next.postln;
+)
+::

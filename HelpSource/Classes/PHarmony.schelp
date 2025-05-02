@@ -1,7 +1,7 @@
 TITLE:: PHarmony
 SUMMARY:: A pattern class for arpeggiating harmonic intervals with various styles
 CATEGORIES:: Patterns>Arpeggiation
-RELATED:: PIntervals, Harmony, ChordOps
+RELATED:: Classes/PIntervals, Classes/Harmony, Classes/ChordOps
 
 CLASSMETHODS::
 METHOD:: new
