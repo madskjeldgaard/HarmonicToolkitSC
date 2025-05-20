@@ -37,7 +37,7 @@ Pdef(\fast,
 */
 
 // Represents a harmony with a set of harmonic intervals
-Harmony{
+Harmony []{
     classvar <all;
     var <intervalsOriginal;
     var <inversions, <doublings;
@@ -184,6 +184,8 @@ Harmony{
         ^this.new(randomName)
     }
 
+
+
     init{|intervals|
 
         if(intervals.class == Symbol, {
@@ -202,6 +204,16 @@ Harmony{
         this.clearDoubles;
 
         ^this
+    }
+
+    at{|index|
+        var semitones = intervalsOriginal[index];
+
+        if(semitones.isNil,{
+            "Interval not found".warn;
+        });
+
+        ^semitones
     }
 
     addInversion{|patternType=\first, style=\up|
