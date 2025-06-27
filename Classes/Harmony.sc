@@ -862,6 +862,37 @@ RomanChords{
         ^result;
     }
 
+
+    // FIXME:This should be used to create arpeggiator patterns
+    // Arpeggiate array and return arpeggiated array
+    arpeggiate{|arpStyle=\chords|
+
+        ^switch(
+            arpStyle,
+            \chords, { ^this },
+            \up, { this},
+            \down, { this.reverse},
+            \updown, {
+                // Creates a pyramid
+                this ++ this.reverse
+            },
+            \downup, {
+                this.reverse ++ this.reverse
+            },
+            \updownPyramid, {
+                // Creates a pyramid
+                this ++ this[..this.size-2].reverse
+            },
+            \downupPyramid, {
+                this.reverse ++ this[..this.size-2].reverse
+            },
+            \random, { this},
+            \upin, { this.upIn},
+            \inup, { this.inUp},
+            \blossomup, { this.blossomUp},
+            \blossomdown, { this.blossomDown}
+        );
+    }
 }
 
 // Arpeggiate a harmony
