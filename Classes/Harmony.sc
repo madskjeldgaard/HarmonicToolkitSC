@@ -167,6 +167,24 @@ Harmony {
         ^super.new.init(intervals)
     }
 
+    *newFromScale{|degreeIndices, scale|
+        ^if(degreeIndices.notNil && scale.notNil, {
+            var intervals = degreeIndices.collect{|deg, index|
+                var octOffset = 0;
+                if(deg > scale.size, {
+                    var numOctaves = ((deg / scale.size)).asInteger.postln;
+                    octOffset = 12 * numOctaves
+                });
+
+                scale.at(deg) + octOffset
+            };
+
+            this.new(intervals);
+        }, {
+            "Degrees and scale must be specified".error
+        })
+    }
+
     *random{
         var randomName = this.all.keys.choose;
 
@@ -475,7 +493,7 @@ ChordOps{
         )
     }
 
-    *double{|intervals, patternType=\root, octaves=1|
+    *double{|intervals, patternType=\root, octaves=1, octaveSize=12|
         var doubledIntervals = intervals.copy;
         var numNotes = intervals.size;
         var octaveShiftSemitones;
@@ -484,7 +502,7 @@ ChordOps{
         if(patternType.isNumber, {
             // Map number to note index: 0=root, 1=second, 2=third, etc.
             var noteIndex = patternType.clip(0, numNotes - 1);
-            var octaveShift = 12 * octaves.sign;
+            var octaveShift = octaveSize * octaves.sign;
 
             octaves.abs.do{|i|
                 doubledIntervals = doubledIntervals.add(
@@ -496,7 +514,7 @@ ChordOps{
 
         // Also handle numeric octaves as number of octaves to shift
         octaveShiftSemitones = {|x|
-            var oct = 12;
+            var oct = octaveSize;
             oct * (x + 1) * octaves.sign;
         };
 
@@ -561,7 +579,11 @@ ChordOps{
         });
     }
 
-    *invert{|intervals, patternType=\first, style=\up|
+    // Also works with modal situations:
+    /*
+     ChordOps.invert([0,2,4,6,8,10,12], 0, style:0, octaveSize: Scale.major.size)
+     */
+    *invert{|intervals, patternType=\first, style=\up, octaveSize=12|
         var invertedIntervals = intervals.copy;
         var numNotes = intervals.size;
         var inversionLevel;
@@ -582,20 +604,20 @@ ChordOps{
             // Move first N notes up one octave
             inversionLevel.do{|idx|
                 style.switch(
-                    \up, { invertedIntervals[idx] = invertedIntervals[idx] + 12 },
-                    \down, { invertedIntervals[idx] = invertedIntervals[idx] - 12 },
+                    \up, { invertedIntervals[idx] = invertedIntervals[idx] + octaveSize },
+                    \down, { invertedIntervals[idx] = invertedIntervals[idx] - octaveSize },
                     \updown, {
                         if(idx % 2 == 0) {
-                            invertedIntervals[idx] = invertedIntervals[idx] + 12
+                            invertedIntervals[idx] = invertedIntervals[idx] + octaveSize
                         } {
-                            invertedIntervals[idx] = invertedIntervals[idx] - 12
+                            invertedIntervals[idx] = invertedIntervals[idx] - octaveSize
                         }
                     },
                     \downup, {
                         if(idx % 2 == 0) {
-                            invertedIntervals[idx] = invertedIntervals[idx] - 12
+                            invertedIntervals[idx] = invertedIntervals[idx] - octaveSize
                         } {
-                            invertedIntervals[idx] = invertedIntervals[idx] + 12
+                            invertedIntervals[idx] = invertedIntervals[idx] + octaveSize
                         }
                     }
                 )
@@ -628,20 +650,20 @@ ChordOps{
 
             indicesToMove.do{|idx|
                 style.switch(
-                    \up, { invertedIntervals[idx] = invertedIntervals[idx] + 12 },
-                    \down, { invertedIntervals[idx] = invertedIntervals[idx] - 12 },
+                    \up, { invertedIntervals[idx] = invertedIntervals[idx] + octaveSize },
+                    \down, { invertedIntervals[idx] = invertedIntervals[idx] - octaveSize },
                     \updown, {
                         if(idx % 2 == 0) {
-                            invertedIntervals[idx] = invertedIntervals[idx] + 12
+                            invertedIntervals[idx] = invertedIntervals[idx] + octaveSize
                         } {
-                            invertedIntervals[idx] = invertedIntervals[idx] - 12
+                            invertedIntervals[idx] = invertedIntervals[idx] - octaveSize
                         }
                     },
                     \downup, {
                         if(idx % 2 == 0) {
-                            invertedIntervals[idx] = invertedIntervals[idx] - 12
+                            invertedIntervals[idx] = invertedIntervals[idx] - octaveSize
                         } {
-                            invertedIntervals[idx] = invertedIntervals[idx] + 12
+                            invertedIntervals[idx] = invertedIntervals[idx] + octaveSize
                         }
                     }
                 )
@@ -654,20 +676,20 @@ ChordOps{
         if(inversionLevel > 0 and: { inversionLevel <= numNotes }, {
             inversionLevel.do{|idx|
                 style.switch(
-                    \up, { invertedIntervals[idx] = invertedIntervals[idx] + 12 },
-                    \down, { invertedIntervals[idx] = invertedIntervals[idx] - 12 },
+                    \up, { invertedIntervals[idx] = invertedIntervals[idx] + octaveSize },
+                    \down, { invertedIntervals[idx] = invertedIntervals[idx] - octaveSize },
                     \updown, {
                         if(idx % 2 == 0) {
-                            invertedIntervals[idx] = invertedIntervals[idx] + 12
+                            invertedIntervals[idx] = invertedIntervals[idx] + octaveSize
                         } {
-                            invertedIntervals[idx] = invertedIntervals[idx] - 12
+                            invertedIntervals[idx] = invertedIntervals[idx] - octaveSize
                         }
                     },
                     \downup, {
                         if(idx % 2 == 0) {
-                            invertedIntervals[idx] = invertedIntervals[idx] - 12
+                            invertedIntervals[idx] = invertedIntervals[idx] - octaveSize
                         } {
-                            invertedIntervals[idx] = invertedIntervals[idx] + 12
+                            invertedIntervals[idx] = invertedIntervals[idx] + octaveSize
                         }
                     }
                 )
@@ -678,20 +700,20 @@ ChordOps{
                 // Clamp to maximum
                 numNotes.do{|idx|
                     style.switch(
-                        \up, { invertedIntervals[idx] = invertedIntervals[idx] + 12 },
-                        \down, { invertedIntervals[idx] = invertedIntervals[idx] - 12 },
+                        \up, { invertedIntervals[idx] = invertedIntervals[idx] + octaveSize },
+                        \down, { invertedIntervals[idx] = invertedIntervals[idx] - octaveSize },
                         \updown, {
                             if(idx % 2 == 0) {
-                                invertedIntervals[idx] = invertedIntervals[idx] + 12
+                                invertedIntervals[idx] = invertedIntervals[idx] + octaveSize
                             } {
-                                invertedIntervals[idx] = invertedIntervals[idx] - 12
+                                invertedIntervals[idx] = invertedIntervals[idx] - octaveSize
                             }
                         },
                         \downup, {
                             if(idx % 2 == 0) {
-                                invertedIntervals[idx] = invertedIntervals[idx] - 12
+                                invertedIntervals[idx] = invertedIntervals[idx] - octaveSize
                             } {
-                                invertedIntervals[idx] = invertedIntervals[idx] + 12
+                                invertedIntervals[idx] = invertedIntervals[idx] + octaveSize
                             }
                         }
                     )
