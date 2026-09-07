@@ -37,7 +37,8 @@ Pdef(\fast,
 */
 
 // Represents a harmony with a set of harmonic intervals
-Harmony []{
+// Represents a harmony with a set of harmonic intervals
+Harmony {
     classvar <all;
     var <intervalsOriginal;
     var <inversions, <doublings;
@@ -184,8 +185,6 @@ Harmony []{
         ^this.new(randomName)
     }
 
-
-
     init{|intervals|
 
         if(intervals.class == Symbol, {
@@ -216,24 +215,17 @@ Harmony []{
         ^semitones
     }
 
+    // Add inversion with full numeric support
     addInversion{|patternType=\first, style=\up|
         inversions = inversions.add([patternType, style]);
-
         inversions = inversions.removeDuplicates;
-
         ^this
     }
 
-    /*
-
-    // Add a dooubling of the root notes either below or above the original notes
-    // Negative octaves value will add the doubling below the original notes
-    */
+    // Add doubling with full numeric support
     addDouble{|patternType=\root, octaves=(-1)|
         doublings = doublings.add([patternType, octaves]);
-
         doublings = doublings.removeDuplicates;
-
         ^this
     }
 
@@ -299,24 +291,135 @@ Harmony []{
     asPHarmony{|arpStyles=\chords, midiNoteOffset=0|
         ^PHarmony(harmoniesArray: this, arpStyles: arpStyles, midiNoteOffset:midiNoteOffset)
     }
+
+    // ==================== NEW ENHANCEMENTS ====================
+
+    // Get max inversion for this chord
+    maxInversion {
+        ^this.get.size
+    }
+
+    // Get all possible inversion levels (0 to max)
+    inversionRange {
+        ^(0..this.maxInversion)
+    }
+
+    // Get max doubling for this chord
+    maxDouble {
+        ^this.get.size
+    }
+
+    // Get all possible doubling levels (0 to max-1)
+    doublingRange {
+        ^(0..this.maxDouble - 1)
+    }
+
+    // Get inversion level as number
+    getInversionLevel {
+        var inv;
+        if(inversions.isEmpty, { ^0 });
+        inv = inversions[0][0];
+        if(inv.isNumber, { ^inv });
+        ^ChordOps.inversionLevelFromSymbol(inv, this.get.size)
+    }
+
+    // Get style as number
+    getInversionStyle {
+        var style;
+        if(inversions.isEmpty, { ^0 });
+        style = inversions[0][1];
+        if(style.isNumber, { ^style });
+        ^switch(style,
+            \up, { 0 },
+            \down, { 1 },
+            \updown, { 2 },
+            \downup, { 3 },
+            { 0 }
+        )
+    }
+
+    // Get all inversions as a list of Harmony objects
+    getAllInversions { |styles([0])|  // 0=up, 1=down, etc.
+        var maxInv = this.maxInversion;
+        var inversions = [];
+        styles = styles.asArray;
+        styles.do{|style|
+            (0..maxInv).do{|inv|
+                inversions = inversions.add(
+                    this.withInversion(inv, style)
+                );
+            }
+        };
+        ^inversions
+    }
+
+    // Get all doublings as a list of Harmony objects
+    getAllDoublings { |octaves([-1, 1])|  // -1=below, 1=above
+        var maxDouble = this.maxDouble;
+        var doublings = [];
+        octaves = octaves.asArray;
+        octaves.do{|oct|
+            (0..maxDouble-1).do{|doubleIdx|
+                doublings = doublings.add(
+                    this.withDouble(doubleIdx, oct)
+                );
+            }
+        };
+        ^doublings
+    }
+
+    // Get a random inversion
+    randomInversion { |style=0|
+        var maxInv = this.maxInversion;
+        var randomInv = rrand(0, maxInv);
+        ^this.withInversion(randomInv, style)
+    }
+
+    // Get a random doubling
+    randomDouble { |octaves([-1, 1])|
+        var maxDouble = this.maxDouble;
+        var randomDouble = rrand(0, maxDouble - 1);
+        var randomOctave = octaves.choose;
+        ^this.withDouble(randomDouble, randomOctave)
+    }
+
+    // Get all inversions as MIDI notes
+    asMidiWithAllInversions { |midiNoteOffset=60, styles([0])|
+        var allInversions = this.getAllInversions(styles);
+        ^allInversions.collect{|inv|
+            inv.asMidiNoteNumbers(midiNoteOffset)
+        }
+    }
+
+    // Convenience methods for common inversions
+    invertFirst { ^this.withInversion(1, \up) }
+    invertSecond { ^this.withInversion(2, \up) }
+    invertThird { ^this.withInversion(3, \up) }
+    invertFourth { ^this.withInversion(4, \up) }
+    invertFifth { ^this.withInversion(5, \up) }
+    invertSixth { ^this.withInversion(6, \up) }
+    invertSeventh { ^this.withInversion(7, \up) }
+
+    // Invert by specific number of notes with style
+    invertN { |n=1, style=\up|
+        ^this.withInversion(n, style)
+    }
 }
-
-
 
 // Perform chord operations on an array of intervals
 // All operations happen in semitone offsets
 ChordOps{
 
     *doublingTypes{
-        ^[\root, \second, \third, \rootandsecond, \rootandthird, \secondandthird, \all]
+        ^[\root, \second, \third, \fourth, \fifth, \sixth, \seventh, \rootandsecond, \rootandthird, \secondandthird, \all]
     }
 
     *inversionTypes{
-        ^[\first, \second, \third, \middle, \top, \edges, \none]
+        ^[\first, \second, \third, \fourth, \fifth, \sixth, \seventh, \middle, \top, \edges, \none]
     }
 
     *prClean{|intervals|
-        // Remove duplicates
+        // Remove duplicates and flatten
         ^intervals.flat.removeDuplicates
     }
 
@@ -324,13 +427,76 @@ ChordOps{
         ^intervals.collect{|interval| interval + amount}
     }
 
+    // Get max inversion for a chord
+    *maxInversion{|intervals|
+        ^intervals.size  // Number of notes = max inversion level
+    }
+
+    // Get all inversion levels as numbers
+    *inversionRange{|intervals|
+        ^(0..intervals.size)
+    }
+
+    // Get max doubling for a chord
+    *maxDouble{|intervals|
+        ^intervals.size  // Can double up to number of notes
+    }
+
+    // Get all doubling levels as numbers
+    *doublingRange{|intervals|
+        ^(0..intervals.size - 1)
+    }
+
+    // Get inversion level from symbolic name
+    *inversionLevelFromSymbol{|symbol, numNotes|
+        ^switch(symbol,
+            \first, { 1 },
+            \second, { 2 },
+            \third, { 3 },
+            \fourth, { 4 },
+            \fifth, { 5 },
+            \sixth, { 6 },
+            \seventh, { 7 },
+            \middle, { (numNotes / 2).floor },
+            \top, { numNotes - 1 },
+            \edges, { 1 },
+            \none, { 0 },
+            { 0 }
+        )
+    }
+
+    // Get style from number
+    *styleFromNumber{|num|
+        ^switch(num % 4,
+            0, { \up },
+            1, { \down },
+            2, { \updown },
+            3, { \downup }
+        )
+    }
+
     *double{|intervals, patternType=\root, octaves=1|
         var doubledIntervals = intervals.copy;
+        var numNotes = intervals.size;
+        var octaveShiftSemitones;
 
-        var octaveShiftSemitones = {|x|
-            // var oct = if (x % 2 == 0) { -12 } { 12 };
+        // Handle numeric input for patternType
+        if(patternType.isNumber, {
+            // Map number to note index: 0=root, 1=second, 2=third, etc.
+            var noteIndex = patternType.clip(0, numNotes - 1);
+            var octaveShift = 12 * octaves.sign;
+
+            octaves.abs.do{|i|
+                doubledIntervals = doubledIntervals.add(
+                    doubledIntervals[noteIndex] + (octaveShift * (i + 1))
+                );
+            };
+            ^this.prClean(doubledIntervals);
+        });
+
+        // Also handle numeric octaves as number of octaves to shift
+        octaveShiftSemitones = {|x|
             var oct = 12;
-
             oct * (x + 1) * octaves.sign;
         };
 
@@ -350,6 +516,26 @@ ChordOps{
                     \third, {
                         doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i))
                     },
+                    \fourth, {
+                        if(numNotes > 3) {
+                            doubledIntervals = doubledIntervals.add(doubledIntervals[3] + octaveShiftSemitones.value(i))
+                        }
+                    },
+                    \fifth, {
+                        if(numNotes > 4) {
+                            doubledIntervals = doubledIntervals.add(doubledIntervals[4] + octaveShiftSemitones.value(i))
+                        }
+                    },
+                    \sixth, {
+                        if(numNotes > 5) {
+                            doubledIntervals = doubledIntervals.add(doubledIntervals[5] + octaveShiftSemitones.value(i))
+                        }
+                    },
+                    \seventh, {
+                        if(numNotes > 6) {
+                            doubledIntervals = doubledIntervals.add(doubledIntervals[6] + octaveShiftSemitones.value(i))
+                        }
+                    },
                     \rootandsecond, {
                         doubledIntervals = doubledIntervals.add(doubledIntervals[0] + octaveShiftSemitones.value(i));
                         doubledIntervals = doubledIntervals.add(doubledIntervals[1] + octaveShiftSemitones.value(i));
@@ -363,9 +549,9 @@ ChordOps{
                         doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i));
                     },
                     \all, {
-                        doubledIntervals = doubledIntervals.add(doubledIntervals[0] + octaveShiftSemitones.value(i));
-                        doubledIntervals = doubledIntervals.add(doubledIntervals[1] + octaveShiftSemitones.value(i));
-                        doubledIntervals = doubledIntervals.add(doubledIntervals[2] + octaveShiftSemitones.value(i));
+                        numNotes.do{|idx|
+                            doubledIntervals = doubledIntervals.add(doubledIntervals[idx] + octaveShiftSemitones.value(i));
+                        }
                     }
                 );
             };
@@ -377,48 +563,143 @@ ChordOps{
 
     *invert{|intervals, patternType=\first, style=\up|
         var invertedIntervals = intervals.copy;
+        var numNotes = intervals.size;
+        var inversionLevel;
 
-        var inversionPattern = patternType.switch(
-            \first, { [1, 0, 0] },
-            \second, { [1, 1, 0] },
-            \third, { [1, 1, 1] },
-            \middle, { [0, 1, 0] },
-            \top, { [0, 0, 1] },
-            \edges, { [1, 0, 1] },
-            \none, { [0, 0, 0] }
-        );
+        // Handle numeric input for style
+        if(style.isNumber, {
+            style = this.styleFromNumber(style);
+        });
 
-        // Check if the pattern type is valid
-        ^if(this.inversionTypes.includes(patternType).not, {
+        // Handle numeric input for patternType directly
+        if(patternType.isNumber, {
+            // Clamp to valid range
+            inversionLevel = patternType.clip(0, numNotes);
+            if(inversionLevel == 0, {
+                ^this.prClean(invertedIntervals);  // No inversion
+            });
+
+            // Move first N notes up one octave
+            inversionLevel.do{|idx|
+                style.switch(
+                    \up, { invertedIntervals[idx] = invertedIntervals[idx] + 12 },
+                    \down, { invertedIntervals[idx] = invertedIntervals[idx] - 12 },
+                    \updown, {
+                        if(idx % 2 == 0) {
+                            invertedIntervals[idx] = invertedIntervals[idx] + 12
+                        } {
+                            invertedIntervals[idx] = invertedIntervals[idx] - 12
+                        }
+                    },
+                    \downup, {
+                        if(idx % 2 == 0) {
+                            invertedIntervals[idx] = invertedIntervals[idx] - 12
+                        } {
+                            invertedIntervals[idx] = invertedIntervals[idx] + 12
+                        }
+                    }
+                )
+            };
+            ^this.prClean(invertedIntervals);
+        });
+
+        // Handle symbolic names
+        inversionLevel = this.inversionLevelFromSymbol(patternType, numNotes);
+
+        // Check if pattern type is valid
+        if(this.inversionTypes.includes(patternType).not, {
             "Invalid pattern type: %".format(patternType).error;
-            nil
+            ^nil
+        });
+
+        // For \middle, \top, \edges we need special handling
+        if(#[\middle, \top, \edges].includes(patternType), {
+            var indicesToMove = patternType.switch(
+                \middle, {
+                    if(numNotes % 2 == 0, {
+                        [numNotes/2 - 1, numNotes/2]
+                    }, {
+                        [(numNotes/2).floor]
+                    })
+                },
+                \top, { [numNotes - 1] },
+                \edges, { [0, numNotes - 1] }
+            );
+
+            indicesToMove.do{|idx|
+                style.switch(
+                    \up, { invertedIntervals[idx] = invertedIntervals[idx] + 12 },
+                    \down, { invertedIntervals[idx] = invertedIntervals[idx] - 12 },
+                    \updown, {
+                        if(idx % 2 == 0) {
+                            invertedIntervals[idx] = invertedIntervals[idx] + 12
+                        } {
+                            invertedIntervals[idx] = invertedIntervals[idx] - 12
+                        }
+                    },
+                    \downup, {
+                        if(idx % 2 == 0) {
+                            invertedIntervals[idx] = invertedIntervals[idx] - 12
+                        } {
+                            invertedIntervals[idx] = invertedIntervals[idx] + 12
+                        }
+                    }
+                )
+            };
+
+            ^this.prClean(invertedIntervals);
+        });
+
+        // Standard inversion: move first N notes up one octave
+        if(inversionLevel > 0 and: { inversionLevel <= numNotes }, {
+            inversionLevel.do{|idx|
+                style.switch(
+                    \up, { invertedIntervals[idx] = invertedIntervals[idx] + 12 },
+                    \down, { invertedIntervals[idx] = invertedIntervals[idx] - 12 },
+                    \updown, {
+                        if(idx % 2 == 0) {
+                            invertedIntervals[idx] = invertedIntervals[idx] + 12
+                        } {
+                            invertedIntervals[idx] = invertedIntervals[idx] - 12
+                        }
+                    },
+                    \downup, {
+                        if(idx % 2 == 0) {
+                            invertedIntervals[idx] = invertedIntervals[idx] - 12
+                        } {
+                            invertedIntervals[idx] = invertedIntervals[idx] + 12
+                        }
+                    }
+                )
+            };
         }, {
-            inversionPattern.do{|dist, index|
-                if (dist != 0) {
+            if(inversionLevel > numNotes, {
+                "Inversion level % exceeds number of notes (%). Clamping to %".format(patternType, numNotes, numNotes).warn;
+                // Clamp to maximum
+                numNotes.do{|idx|
                     style.switch(
-                        \up, { invertedIntervals[index] = invertedIntervals[index] + (12 * dist) },
-                        \down, { invertedIntervals[index] = invertedIntervals[index] - (12 * dist) },
+                        \up, { invertedIntervals[idx] = invertedIntervals[idx] + 12 },
+                        \down, { invertedIntervals[idx] = invertedIntervals[idx] - 12 },
                         \updown, {
-                            if (index % 2 == 0) {
-                                invertedIntervals[index] = invertedIntervals[index] + (12 * dist)
+                            if(idx % 2 == 0) {
+                                invertedIntervals[idx] = invertedIntervals[idx] + 12
                             } {
-                                invertedIntervals[index] = invertedIntervals[index] - (12 * dist)
+                                invertedIntervals[idx] = invertedIntervals[idx] - 12
                             }
                         },
                         \downup, {
-                            if (index % 2 == 0) {
-                                invertedIntervals[index] = invertedIntervals[index] - (12 * dist)
+                            if(idx % 2 == 0) {
+                                invertedIntervals[idx] = invertedIntervals[idx] - 12
                             } {
-                                invertedIntervals[index] = invertedIntervals[index] + (12 * dist)
+                                invertedIntervals[idx] = invertedIntervals[idx] + 12
                             }
                         }
                     )
                 }
-            };
-
-            this.prClean(invertedIntervals)
+            });
         });
 
+        ^this.prClean(invertedIntervals);
     }
 
     *revert{|intervals, patternType, style|
@@ -431,7 +712,6 @@ ChordOps{
 
         ^ChordOps.invert(intervals, patternType, revertedStyle)
     }
-
 }
 
 // Turn Harmonys into intervals in a pattern
@@ -939,5 +1219,27 @@ z.next()
 + Symbol {
     asHarmony{
         ^Harmony.new(this)
+    }
+}
+// Arpeggiate a harmony
++ Harmony {
+    asPseq{|repeats=inf|
+        ^Pseq.new(this.get, repeats)
+    }
+
+    asPrand{|repeats=inf|
+        ^Prand.new(this.get, repeats)
+    }
+
+    asPxrand{|repeats=inf|
+        ^Pxrand.new(this.get, repeats)
+    }
+
+    asPshuffle{|repeats=inf|
+        ^Pshuffle.new(this.get, repeats)
+    }
+
+    asPtuple{|repeats=inf|
+        ^Ptuple.new(this.get, repeats)
     }
 }
